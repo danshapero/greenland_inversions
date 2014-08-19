@@ -17,7 +17,7 @@ for glacier in glaciers:
     # Make the bed.xyz and surf.xyz files because ExtrudeMesh is hard-coded to use them. JESUS, AMATEUR HOUR AROUND HERE.
     if (not os.path.exists('../dems/'+glacier+'/bed.xyz') or 
         not os.path.exists('../dems/'+glacier+'/surf.xyz')):
-        os.system("sed '1,2d' ../dems/"+glacier+"/zb_aniso_DEM.xy > ../dems/"+glacier+"/bed.xyz")
+        os.system("sed '1,2d' ../dems/"+glacier+"/zbDEM.xy > ../dems/"+glacier+"/bed.xyz")
         os.system("sed '1,2d' ../dems/"+glacier+"/zsDEM.xy > ../dems/"+glacier+"/surf.xyz")
 
     # Make directories for each glacier's 3d mesh
