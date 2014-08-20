@@ -29,4 +29,4 @@ for glacier in glaciers:
         os.system('../ExtrudeMesh '+glacier+' '+glacier+'3d 11 1 1 0 0 0 0 ../dems/'+glacier+' 250.0 3 -2.0e9')
 
     if not os.path.exists(glacier+'3d/partitioning.4/part.1.header'):
-        os.system('ElmerGrid 2 2 '+glacier+'3d -metis 4')
+        os.system('ElmerGrid 2 2 '+glacier+'3d -metis 4 -removeunused')
