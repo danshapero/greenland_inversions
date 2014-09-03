@@ -7,7 +7,7 @@
 ############################################################################
 data:
 	cd data && ./make_data.py && cd ../
-	cd dems && ./make_dems.py && cd ../
+	cd dems && ./make_dems.py && ./postprocess_jak.py && cd ../
 
 
 

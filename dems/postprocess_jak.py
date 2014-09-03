@@ -65,7 +65,6 @@ def fill_internal_missing_data(q, x, y):
 
         if weights != 0.0:
             q[i, j] /= weights
-            print (i, j, q[i, j])
         else:
             print("{0} {1}\n", i, j)
 
