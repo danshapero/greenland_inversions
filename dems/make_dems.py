@@ -6,6 +6,7 @@ sys.path.insert(0,'../scripts')
 import os
 from geodat import *
 from geotif import *
+from read_dem import *
 
 filenames = {
                 'helheim':  {
@@ -21,7 +22,7 @@ filenames = {
                 },
 
                  'jakobshavn': {
-                     'velocity': 'TSX_W69.10N_29Jan09_09Feb09',
+                     'velocity': 'mosaicOffsets',
                      'surface' : 'zsDEM.xy',
                      'bed'     : 'zbDEM.xy'
                  }
@@ -47,8 +48,8 @@ for glacier in filenames.keys():
 
         # Find the points where there actually is measured velocity data
         (I,J) = np.where(vx!=-2.0e+9)
-        (imin,imax) = (min(I)-1,max(I)+1)
-        (jmin,jmax) = (min(J)-1,max(J)+1)
+        (imin,imax) = (min(I)-2,max(I)+2)
+        (jmin,jmax) = (min(J)-2,max(J)+2)
         del I,J
 
         vx = vx[imin:imax+1,jmin:jmax+1]
@@ -82,19 +83,6 @@ for glacier in filenames.keys():
 
         # Delete the velocities
         del vx, vy, ex, ey
-    else:
-        x = np.zeros(2)
-        y = np.zeros(2)
-
-        fid = open(glacier+'/UDEM.xy')
-        nx = int(fid.readline().split()[0])
-        ny = int(fid.readline().split()[0])
-
-        (x[0],y[0]) = map(float,fid.readline().split()[0:2])
-        h = float(fid.readline().split()[1])-y[0]
-        x[1] = x[0]+nx*h
-        y[1] = y[0]+ny*h
-
 
 
     ########################################################################
@@ -110,4 +98,87 @@ for glacier in filenames.keys():
 
 
     print('Done making DEMs for '+glacier)
+
+
+############################################################################
+## Do some extra junk for Jakobshavn                                      ##
+############################################################################
+(x, y, vx) = read_dem('jakobshavn/UDEM.xy')
+(x, y, vy) = read_dem('jakobshavn/VDEM.xy')
+
+ny, nx = np.shape(vx)
+dx = x[1] - x[0]
+
+
+# First, find all the external points where we don't have any data using a
+# depth-first search, and re-label them as such
+stack = [ (0, 0) ]
+q = np.copy(vx)
+q[0, 0] = -3.0e+9
+
+while stack:
+    (i, j) = stack.pop()
+    q[i, j] = -4.0e+9
+
+    for di in (-1, 0, 1):
+        for dj in (-1, 0, 1):
+            k = (i + di) % ny
+            l = (j + dj) % nx
+
+            if q[k, l] == -2.0e+9:
+                q[k, l] = -3.0e+9
+                stack.append( (k, l) )
+
+I, J = np.where(q == -2.0e+9)
+nn = len(I)
+print(nn)
+
+
+# Then find all the internal points with missing data, and interpolate a
+# value to them using inverse cube distance weighting
+for m in range(nn):
+    i = I[m]
+    j = J[m]
+
+    vx[i, j] = 0.0
+    vy[i, j] = 0.0
+
+    weights = 0.0
+
+    for di in range(-4, 5):
+        for dj in range(-4, 5):
+            k = i + di
+            l = j + dj
+
+            if q[k, l] > -2.0e+9:
+                weight = 1.0 / np.sqrt(di**2 + dj**2)**3
+                vx[i, j] += weight * vx[k, l]
+                vy[i, j] += weight * vy[k, l]
+                weights += weight
+
+            if weights != 0.0:
+                vx[i, j] /= weights
+                vy[i, j] /= weights
+            else:
+                print ("{0} {1}\n".format(i, j))
+
+
+# Finally, write all the results out to a file
+fidu = open('jakobshavn/UDEM0.xy', 'w')
+fidv = open('jakobshavn/VDEM0.xy', 'w')
+
+
+for fid in [fidu, fidv]:
+    fid.write('{0}\n{1}\n'.format(nx,ny))
+
+for j in range(nx):
+    for i in range(ny):
+        fidu.write('{0} {1} {2}\n'.format(x[j],y[i],vx[i,j]))
+        fidv.write('{0} {1} {2}\n'.format(x[j],y[i],vy[i,j]))
+
+for fid in [fidu, fidv]:
+    fid.close()
+
+
+print("Done post-processing Jakobshavn")
 
