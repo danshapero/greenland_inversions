@@ -74,8 +74,33 @@ if __name__ == "__main__":
     (x, y, vx) = read_dem('jakobshavn/UDEM.xy')
     (x, y, vy) = read_dem('jakobshavn/VDEM.xy')
 
-    qx = np.copy(vx)
-    relabel_external_missing_data(qx, 0, 0)
-    fill_internal_missing_data(qx, x, y)
+    nx = len(x)
+    ny = len(y)
 
-    print(np.min(qx), np.max(qx))
+    q = np.copy(vx)
+    relabel_external_missing_data(q, 0, 0)
+    fill_internal_missing_data(q, x, y)
+    vx = np.maximum(q, vx)
+
+    q = np.copy(vy)
+    relabel_external_missing_data(q, 0, 0)
+    fill_internal_missing_data(q, x, y)
+    vy = np.maximum(q, vy)
+
+    fidu = open('jakobshavn/UDEM0.xy', 'w')
+    fidv = open('jakobshavn/VDEM0.xy', 'w')
+
+    for fid in (fidu, fidv):
+        fid.write("{0}\n{1}\n".format(nx, ny))
+
+    for j in range(nx):
+        for i in range(ny):
+            fidu.write("{0} {1} {2}\n".format(x[j], y[i], vx[i, j]))
+            fidv.write("{0} {1} {2}\n".format(x[j], y[i], vy[i, j]))
+
+    for fid in (fidu, fidv):
+        fid.close()
+
+    os.system("mv jakobshavn/UDEM0.xy jakobshavn/UDEM.xy")
+    os.system("mv jakobshavn/VDEM0.xy jakobshavn/VDEM.xy")
+
