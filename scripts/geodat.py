@@ -3,7 +3,6 @@ from scipy.io import *
 import struct
 import sys
 import math
-import matplotlib.pyplot as plt
 
 # This function reads the .geodat file, which stores the number of pixels
 # in the image, the pixel size and the location of the lower left corner
