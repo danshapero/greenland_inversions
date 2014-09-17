@@ -19,7 +19,6 @@ R = 8.3144
 A = A0 * math.exp(-Q / (R * T))
 
 
-
 def compute_basal_fields(x, y, s, b, u, v):
     '''
     Inputs:
@@ -66,12 +65,22 @@ def compute_basal_fields(x, y, s, b, u, v):
 
     sb = np.sqrt(ub**2 + vb**2)
 
+    def fill_to_boundary(phi):
+        phi[0, :] = phi[1, :]
+        phi[-1, :] = phi[-2, :]
+        phi[:, 0] = phi[:, 1]
+        phi[:, -1] = phi[:, -2]
+
+    fill_to_boundary(sb)
+    fill_to_boundary(ub)
+    fill_to_boundary(vb)
+
 
     #-------------------------------------
     # Compute the basal sliding parameter
     beta = np.zeros((ny, nx))
-    for i in range(1, ny - 1):
-        for j in range(1, nx - 1):
+    for i in range(ny):
+        for j in range(nx):
             h = max(s[i, j] - b[i, j], 0.0)
             dp = min(ub[i, j] * dsdx[i, j] + vb[i, j] * dsdy[i, j], 0.0)
             beta[i, j] = -rho * g * h * dp / (sb[i, j]**2 + 30.0)
@@ -93,6 +102,13 @@ if __name__ == "__main__":
 
         nx = len(x)
         ny = len(y)
+
+        #----------------------------------
+        # Smooth the ice surface elevation
+        for i in range(1, ny - 1):
+            for j in range(1, nx - 1):
+                s[i, j] = (4 * s[i, j] + s[i + 1, j] + s[i - 1, j]
+                                        + s[i, j + 1] + s[i, j - 1]) / 8.0
 
 
         #------------------------------------
@@ -121,6 +137,20 @@ if __name__ == "__main__":
 
         del uf, vf, xr, yr, ur, vr
 
+
+        #----------------------------------------------
+        # Compute some bed sliding velocities from SIA
         beta, ub, vb = compute_basal_fields(x, y, s, b, u, v)
+
+        for i in range(ny):
+            for j in range(nx):
+                ss = np.sqrt(u[i, j]**2 + v[i, j]**2)
+                sb = np.sqrt(ub[i, j]**2 + vb[i, j]**2)
+                angle = (u[i, j] * ub[i, j] + v[i, j] * vb[i, j]) / (ss * sb)
+                sgn = 1.0 * (angle > 0)
+
+                ub[i, j] = u[i, j] * min(0.95, sb / ss) * sgn
+                vb[i, j] = v[i, j] * min(0.95, sb / ss) * sgn
+                
 
         print("Done computing basal fields for " + glacier)
