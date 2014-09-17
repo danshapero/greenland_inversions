@@ -84,6 +84,7 @@ def compute_basal_fields(x, y, s, b, u, v):
             h = max(s[i, j] - b[i, j], 0.0)
             dp = min(ub[i, j] * dsdx[i, j] + vb[i, j] * dsdy[i, j], 0.0)
             beta[i, j] = -rho * g * h * dp / (sb[i, j]**2 + 30.0)
+            beta[i, j] = max(beta[i, j], 0.0015)
 
     beta = np.sqrt(beta)
 
@@ -146,11 +147,21 @@ if __name__ == "__main__":
             for j in range(nx):
                 ss = np.sqrt(u[i, j]**2 + v[i, j]**2)
                 sb = np.sqrt(ub[i, j]**2 + vb[i, j]**2)
-                angle = (u[i, j] * ub[i, j] + v[i, j] * vb[i, j]) / (ss * sb)
-                sgn = 1.0 * (angle > 0)
 
-                ub[i, j] = u[i, j] * min(0.95, sb / ss) * sgn
-                vb[i, j] = v[i, j] * min(0.95, sb / ss) * sgn
-                
+                if ss > 0:
+                    ub[i, j] = u[i, j] * min(0.95, sb / ss)
+                    vb[i, j] = v[i, j] * min(0.95, sb / ss)
+                else:
+                    ub[i, j] = -2.0e+9
+                    vb[i, j] = -2.0e+9
+
+
+        fidbeta = open(glacier + "/betaDEM.xy", "w")
+        fidbeta.write('{0}\n{1}\n'.format(nx, ny))
+
+        for j in range(nx):
+            for i in range(ny):
+                fidbeta.write('{0} {1} {2}\n'.format(x[j], y[i], beta[i, j]))
+
 
         print("Done computing basal fields for " + glacier)
