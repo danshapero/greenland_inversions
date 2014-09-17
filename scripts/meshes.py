@@ -8,6 +8,25 @@ from scipy.sparse import lil_matrix
 # Function to read in .poly files                                          #
 ############################################################################
 def read_poly(filename):
+    """
+    Function to read in a .poly file in Triangle's format.
+
+    Arguments
+    ---------
+    filename: string
+        path to the .poly file
+
+    Returns
+    -------
+    x, y : numpy array of doubles
+        coordinates of the points of the planar straight-line graph (PSLG)
+    bnd : numpy array of ints
+        boundary markers
+    edge : numpy array of ints
+        list of edges of the PSLG
+    xh, yh : numpy array of doubles
+        coordinates of holes
+    """
     fid = open(filename,'r')
 
     # Read in the coordinates of the boundary pointers
