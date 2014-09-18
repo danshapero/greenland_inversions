@@ -84,9 +84,12 @@ def compute_basal_fields(x, y, s, b, u, v):
             h = max(s[i, j] - b[i, j], 0.0)
             dp = min(ub[i, j] * dsdx[i, j] + vb[i, j] * dsdy[i, j], 0.0)
             beta[i, j] = -rho * g * h * dp / (sb[i, j]**2 + 30.0)
-            beta[i, j] = max(beta[i, j], 0.0015)
 
     beta = np.sqrt(beta)
+
+    for i in range(ny):
+        for j in range(nx):
+            beta[i, j] = max(beta[i, j], 0.0015)
 
     return beta, ub, vb
 
