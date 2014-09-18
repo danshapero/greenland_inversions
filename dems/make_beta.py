@@ -50,6 +50,24 @@ def compute_basal_fields(x, y, s, b, u, v):
             dsdx[i, j] = 0.5 * (s[i, j + 1] - s[i, j - 1]) / dx
             dsdy[i, j] = 0.5 * (s[i + 1, j] - s[i - 1, j]) / dx
 
+    # Compute the magnitude of the surface slope, the average slope and the 
+    # standard deviation of the slope
+    ds = np.sqrt(dsdx**2 + dsdy**2)
+    avg = np.average(ds)
+    stddev = np.std(ds)
+
+    # The maximum slope we'll allow, for the purposes of coming up with a
+    # bed sliding velocity, is the average + 1 standard deviation.
+    mva = avg + stddev
+
+    # Scale the surface slope at any point where it's too steep
+    for i in range(ny):
+        for j in range(nx):
+            if ds[i, j] > mva:
+                dsdx[i, j] = mva / ds[i, j] * dsdx[i, j]
+                dsdy[i, j] = mva / ds[i, j] * dsdy[i, j]
+                ds[i, j] = mva
+
 
     #------------------------------------
     # Compute the bed sliding velocities
@@ -59,7 +77,7 @@ def compute_basal_fields(x, y, s, b, u, v):
     for i in range(1, ny - 1):
         for j in range(1, nx - 1):
             h = max(s[i, j] - b[i, j], 0.0)
-            ds2 = dsdx[i, j]**2 + dsdy[i, j]**2
+            ds2 = ds[i, j]**2
             rgh3 = (rho * g * h)**3
             ub[i, j] = u[i, j] + 0.5 * A * rgh3 * h * ds2 * dsdx[i, j]
             vb[i, j] = v[i, j] + 0.5 * A * rgh3 * h * ds2 * dsdy[i, j]
@@ -87,10 +105,6 @@ def compute_basal_fields(x, y, s, b, u, v):
             beta[i, j] = -rho * g * h * dp / (sb[i, j]**2 + 30.0)
 
     beta = np.sqrt(beta)
-
-    for i in range(ny):
-        for j in range(nx):
-            beta[i, j] = max(beta[i, j], 0.0015)
 
     return beta, ub, vb
 
@@ -147,6 +161,10 @@ if __name__ == "__main__":
             #----------------------------------------------
             # Compute some bed sliding velocities from SIA
             beta, ub, vb = compute_basal_fields(x, y, s, b, u, v)
+
+            for i in range(ny):
+                for j in range(nx):
+                    beta[i, j] = max(beta[i, j], 0.0015)
 
             for i in range(ny):
                 for j in range(nx):
