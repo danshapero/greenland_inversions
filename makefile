@@ -1,4 +1,4 @@
-.PHONY: data meshes clean
+.PHONY: data dems meshes clean
 
 
 
@@ -7,7 +7,9 @@
 ############################################################################
 data:
 	cd data && ./make_data.py && cd ../
-	cd dems && ./make_dems.py && ./postprocess_jak.py && cd ../
+
+dems:
+	cd dems && ./make_dems.py && ./postprocess_jak.py && ./make_beta.py && cd ../
 
 
 
@@ -40,7 +42,7 @@ lib/%.so: source/%.f90
 ############################################################################
 ## Rules for running simulations                                          ##
 ############################################################################
-all: data meshes $(SOLVERS)
+all: data dems meshes $(SOLVERS)
 helheim: all
 	echo elmer/Robin_Beta_Helheim.sif > ELMERSOLVER_STARTINFO ; \
 	export glacier=helheim ; \

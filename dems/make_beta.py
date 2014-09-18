@@ -3,6 +3,7 @@
 import sys
 sys.path.insert(0,'../scripts')
 
+import os
 import math
 import numpy as np
 from read_dem import *
@@ -99,72 +100,73 @@ if __name__ == "__main__":
     glaciers = ["helheim", "kangerd", "jakobshavn"]
 
     for glacier in glaciers:
-        #--------------------------------------------
-        # Read in the ice surface and bed elevations
-        (x, y, s) = read_dem(glacier + "/zsDEM.xy")
-        (x, y, b) = read_dem(glacier + "/zbDEM.xy")
+        if not os.path.exists(glacier + "/betaDEM.xy"):
+            #--------------------------------------------
+            # Read in the ice surface and bed elevations
+            (x, y, s) = read_dem(glacier + "/zsDEM.xy")
+            (x, y, b) = read_dem(glacier + "/zbDEM.xy")
 
-        nx = len(x)
-        ny = len(y)
+            nx = len(x)
+            ny = len(y)
 
-        #----------------------------------
-        # Smooth the ice surface elevation
-        for i in range(1, ny - 1):
-            for j in range(1, nx - 1):
-                s[i, j] = (4 * s[i, j] + s[i + 1, j] + s[i - 1, j]
-                                        + s[i, j + 1] + s[i, j - 1]) / 8.0
-
-
-        #------------------------------------
-        # Read in the ice surface velocities
-        (xr, yr, ur) = read_dem(glacier + "/UDEM.xy")
-        (xr, yr, vr) = read_dem(glacier + "/VDEM.xy")
-
-        nxr = len(xr)
-        nyr = len(yr)
-
-        for i in range(nyr):
-            for j in range(nxr):
-                if ur[i, j] == -2.0e+9:
-                    ur[i, j] = 0.0
-                    vr[i, j] = 0.0
-
-        # Interpolate the velocity data to the grid for the elevations    
-        uf = interpolate.RectBivariateSpline(xr, yr, ur.T)
-        vf = interpolate.RectBivariateSpline(xr, yr, vr.T)
-        u = np.zeros((ny, nx))
-        v = np.zeros((ny, nx))
-        for i in range(ny):
-            for j in range(nx):
-                u[i, j] = uf(x[j], y[i])
-                v[i, j] = vf(x[j], y[i])
-
-        del uf, vf, xr, yr, ur, vr
+            #----------------------------------
+            # Smooth the ice surface elevation
+            for i in range(1, ny - 1):
+                for j in range(1, nx - 1):
+                    s[i, j] = (4 * s[i, j] + s[i + 1, j] + s[i - 1, j]
+                                            + s[i, j + 1] + s[i, j - 1]) / 8.0
 
 
-        #----------------------------------------------
-        # Compute some bed sliding velocities from SIA
-        beta, ub, vb = compute_basal_fields(x, y, s, b, u, v)
+            #------------------------------------
+            # Read in the ice surface velocities
+            (xr, yr, ur) = read_dem(glacier + "/UDEM.xy")
+            (xr, yr, vr) = read_dem(glacier + "/VDEM.xy")
 
-        for i in range(ny):
-            for j in range(nx):
-                ss = np.sqrt(u[i, j]**2 + v[i, j]**2)
-                sb = np.sqrt(ub[i, j]**2 + vb[i, j]**2)
+            nxr = len(xr)
+            nyr = len(yr)
 
-                if ss > 0:
-                    ub[i, j] = u[i, j] * min(0.95, sb / ss)
-                    vb[i, j] = v[i, j] * min(0.95, sb / ss)
-                else:
-                    ub[i, j] = -2.0e+9
-                    vb[i, j] = -2.0e+9
+            for i in range(nyr):
+                for j in range(nxr):
+                    if ur[i, j] == -2.0e+9:
+                        ur[i, j] = 0.0
+                        vr[i, j] = 0.0
 
-
-        fidbeta = open(glacier + "/betaDEM.xy", "w")
-        fidbeta.write('{0}\n{1}\n'.format(nx, ny))
-
-        for j in range(nx):
+            # Interpolate the velocity data to the grid for the elevations    
+            uf = interpolate.RectBivariateSpline(xr, yr, ur.T)
+            vf = interpolate.RectBivariateSpline(xr, yr, vr.T)
+            u = np.zeros((ny, nx))
+            v = np.zeros((ny, nx))
             for i in range(ny):
-                fidbeta.write('{0} {1} {2}\n'.format(x[j], y[i], beta[i, j]))
+                for j in range(nx):
+                    u[i, j] = uf(x[j], y[i])
+                    v[i, j] = vf(x[j], y[i])
+
+            del uf, vf, xr, yr, ur, vr
 
 
-        print("Done computing basal fields for " + glacier)
+            #----------------------------------------------
+            # Compute some bed sliding velocities from SIA
+            beta, ub, vb = compute_basal_fields(x, y, s, b, u, v)
+
+            for i in range(ny):
+                for j in range(nx):
+                    ss = np.sqrt(u[i, j]**2 + v[i, j]**2)
+                    sb = np.sqrt(ub[i, j]**2 + vb[i, j]**2)
+
+                    if ss > 0:
+                        ub[i, j] = u[i, j] * min(0.95, sb / ss)
+                        vb[i, j] = v[i, j] * min(0.95, sb / ss)
+                    else:
+                        ub[i, j] = -2.0e+9
+                        vb[i, j] = -2.0e+9
+
+
+            fidbeta = open(glacier + "/betaDEM.xy", "w")
+            fidbeta.write('{0}\n{1}\n'.format(nx, ny))
+
+            for j in range(nx):
+                for i in range(ny):
+                    fidbeta.write('{0} {1} {2}\n'.format(x[j], y[i], beta[i, j]))
+
+
+            print("Done computing basal fields for " + glacier)
