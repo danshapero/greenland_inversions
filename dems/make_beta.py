@@ -58,7 +58,7 @@ def compute_basal_fields(x, y, s, b, u, v):
 
     # The maximum slope we'll allow, for the purposes of coming up with a
     # bed sliding velocity, is the average + 1 standard deviation.
-    mva = avg + stddev
+    mva = avg + 0.25 * stddev
 
     # Scale the surface slope at any point where it's too steep
     for i in range(ny):
@@ -74,15 +74,35 @@ def compute_basal_fields(x, y, s, b, u, v):
     ub = np.zeros((ny, nx))
     vb = np.zeros((ny, nx))
 
+    # First use the SIA approximation to get a rough estimate of the bed
+    # sliding velocity
     for i in range(1, ny - 1):
         for j in range(1, nx - 1):
-            h = max(s[i, j] - b[i, j], 0.0)
-            ds2 = ds[i, j]**2
-            rgh3 = (rho * g * h)**3
-            ub[i, j] = u[i, j] + 0.5 * A * rgh3 * h * ds2 * dsdx[i, j]
-            vb[i, j] = v[i, j] + 0.5 * A * rgh3 * h * ds2 * dsdy[i, j]
+            if u[i, j] != -2.0e+9:
+                h = max(s[i, j] - b[i, j], 0.0)
+                ds2 = ds[i, j]**2
+                rgh3 = (rho * g * h)**3
+                ub[i, j] = u[i, j] + 0.5 * A * rgh3 * h * ds2 * dsdx[i, j]
+                vb[i, j] = v[i, j] + 0.5 * A * rgh3 * h * ds2 * dsdy[i, j]
+            else:
+                ub[i, j] = -2.0e+9
+                vb[i, j] = -2.0e+9
 
-    sb = np.sqrt(ub**2 + vb**2)
+    # The SIA guess could behave very pathologically in some places, so force
+    # the bed velocities to point in the same direction as the surface
+    # velocities and cut off the speeds at some minimum / maximum
+    for i in range(ny):
+        for j in range(nx):
+            if u[i, j] != -2.0e+9:
+                ss = np.sqrt(u[i, j]**2 + v[i, j]**2)
+                sb = np.sqrt(ub[i, j]**2 + vb[i, j]**2)
+
+                angle = 1.0
+                if ss > 0 and sb > 0:
+                    angle = (u[i, j]*ub[i, j] + v[i, j]*vb[i, j]) / (ss * sb)
+
+                ub[i, j] = u[i, j] * min(0.99, sb / ss) * max(angle, 0.05)
+                vb[i, j] = v[i, j] * min(0.99, sb / ss) * max(angle, 0.05)
 
     def fill_to_boundary(phi):
         phi[0, :] = phi[1, :]
@@ -90,7 +110,6 @@ def compute_basal_fields(x, y, s, b, u, v):
         phi[:, 0] = phi[:, 1]
         phi[:, -1] = phi[:, -2]
 
-    fill_to_boundary(sb)
     fill_to_boundary(ub)
     fill_to_boundary(vb)
 
@@ -100,11 +119,17 @@ def compute_basal_fields(x, y, s, b, u, v):
     beta = np.zeros((ny, nx))
     for i in range(ny):
         for j in range(nx):
-            h = max(s[i, j] - b[i, j], 0.0)
-            dp = min(ub[i, j] * dsdx[i, j] + vb[i, j] * dsdy[i, j], 0.0)
-            beta[i, j] = -rho * g * h * dp / (sb[i, j]**2 + 30.0)
+            if u[i, j] != -2.0e+9:
+                h = max(s[i, j] - b[i, j], 0.0)
+                dp = min(ub[i, j] * dsdx[i, j] + vb[i, j] * dsdy[i, j], 0.0)
+                beta[i, j] = -rho*g*h*dp / (ub[i, j]**2 + vb[i, j]**2 + 30.0)
 
     beta = np.sqrt(beta)
+
+    for i in range(ny):
+        for j in range(nx):
+            if u[i, j] == -2.0e+9:
+                beta[i, j] = -2.0e+9
 
     return beta, ub, vb
 
@@ -115,47 +140,47 @@ if __name__ == "__main__":
 
     for glacier in glaciers:
         if not os.path.exists(glacier + "/betaDEM.xy"):
-            #--------------------------------------------
-            # Read in the ice surface and bed elevations
-            (x, y, s) = read_dem(glacier + "/zsDEM.xy")
-            (x, y, b) = read_dem(glacier + "/zbDEM.xy")
+            #------------------------------------
+            # Read in the ice surface velocities
+            (x, y, u) = read_dem(glacier + "/UDEM.xy")
+            (x, y, v) = read_dem(glacier + "/VDEM.xy")
 
             nx = len(x)
             ny = len(y)
 
+
+            #--------------------------------------------
+            # Read in the ice surface and bed elevations
+            (xd, yd, sd) = read_dem(glacier + "/zsDEM.xy")
+            (xd, yd, bd) = read_dem(glacier + "/zbDEM.xy")
+            nxd = len(xd)
+            nyd = len(yd)
+
+            dxd = xd[1] - xd[0]
+            dyd = yd[1] - yd[0]
+
+
             #----------------------------------
             # Smooth the ice surface elevation
-            for i in range(1, ny - 1):
-                for j in range(1, nx - 1):
-                    s[i, j] = (4 * s[i, j] + s[i + 1, j] + s[i - 1, j]
-                                            + s[i, j + 1] + s[i, j - 1]) / 8.0
+            for i in range(1, nyd - 1):
+                for j in range(1, nxd - 1):
+                    sd[i, j] = (4 * sd[i, j] + 
+                                    sd[i + 1, j] + sd[i - 1, j] +
+                                    sd[i, j + 1] + sd[i, j - 1]) / 8.0
 
 
-            #------------------------------------
-            # Read in the ice surface velocities
-            (xr, yr, ur) = read_dem(glacier + "/UDEM.xy")
-            (xr, yr, vr) = read_dem(glacier + "/VDEM.xy")
+            # Interpolate the elevation data to the grid for velocity
+            sf = interpolate.RectBivariateSpline(xd, yd, sd.T)
+            bf = interpolate.RectBivariateSpline(xd, yd, bd.T)
+            s = np.zeros((ny, nx))
+            b = np.zeros((ny, nx))
 
-            nxr = len(xr)
-            nyr = len(yr)
-
-            for i in range(nyr):
-                for j in range(nxr):
-                    if ur[i, j] == -2.0e+9:
-                        ur[i, j] = 0.0
-                        vr[i, j] = 0.0
-
-            # Interpolate the velocity data to the grid for the elevations    
-            uf = interpolate.RectBivariateSpline(xr, yr, ur.T)
-            vf = interpolate.RectBivariateSpline(xr, yr, vr.T)
-            u = np.zeros((ny, nx))
-            v = np.zeros((ny, nx))
             for i in range(ny):
                 for j in range(nx):
-                    u[i, j] = uf(x[j], y[i])
-                    v[i, j] = vf(x[j], y[i])
+                    s[i, j] = sf(x[j], y[i])
+                    b[i, j] = bf(x[j], y[i])
 
-            del uf, vf, xr, yr, ur, vr
+            del sf, bf, xd, yd, sd, bd
 
 
             #----------------------------------------------
@@ -166,19 +191,9 @@ if __name__ == "__main__":
                 for j in range(nx):
                     beta[i, j] = max(beta[i, j], 0.0015)
 
-            for i in range(ny):
-                for j in range(nx):
-                    ss = np.sqrt(u[i, j]**2 + v[i, j]**2)
-                    sb = np.sqrt(ub[i, j]**2 + vb[i, j]**2)
 
-                    if ss > 0:
-                        ub[i, j] = u[i, j] * min(0.95, sb / ss)
-                        vb[i, j] = v[i, j] * min(0.95, sb / ss)
-                    else:
-                        ub[i, j] = -2.0e+9
-                        vb[i, j] = -2.0e+9
-
-
+            #---------------------------------
+            # Write the results out to a file
             fidbeta = open(glacier + "/betaDEM.xy", "w")
             fidbeta.write('{0}\n{1}\n'.format(nx, ny))
 
