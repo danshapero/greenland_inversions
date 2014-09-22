@@ -8,13 +8,6 @@ $name="Robin_Beta"
 ! Parametre de régularisation  
 $Lambda=1.0e10
 
-!Reference Slip Coefficicient used to construct surface velocities
-$ function betaSquare(tx) {\
-  yearinsec = 365.25*24*60*60;\
-  beta=1.0e5;\
-  _betaSquare=beta*beta/(1.0e06*yearinsec);\
-}
-
 !Reference Viscosity used to construct surface velocities
 $ function MuSquare(tx) {\
    yearinsec = 365.25*24*60*60;\
@@ -70,13 +63,12 @@ End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Initial Condition 1
-  BetaS = Variable coordinate 1, Coordinate 2
-     REAL MATC "betaSquare(tx)"
   MuS = Variable coordinate 1, Coordinate 2
        REAL MATC "MuSquare(tx)"
  
 ! initial guess for (square root) slip coeff.
-  Beta = REAL $ 1.0e3/sqrt(1.0e06*yearinsec)
+  Beta = Variable Coordinate 1
+      Real procedure "lib/Init.so" "betaIni"
 
   Pressure = Real 0.0 
   Velocity 1 = Real 0.0 
@@ -90,9 +82,9 @@ Initial Condition 1
 
 ! Surface velocities (data)
   Vsurfini 1 = Variable Coordinate 1
-     Real procedure "lib/USF_Init" "UIni"
+     Real procedure "lib/Init.so" "USIni"
   Vsurfini 2 = Variable Coordinate 1
-     Real procedure "lib/USF_Init" "VIni"
+     Real procedure "lib/Init.so" "VSIni"
 End
 
 
@@ -145,23 +137,21 @@ Solver 1
   Steady State Convergence Tolerance = Real 1.0e-12
 
 ! Define  some usefull Variables
-  Exported Variable 1 = BetaS
+  Exported Variable 1 = MuS
   Exported Variable 1 DOFS = 1
-  Exported Variable 2 = MuS
-  Exported Variable 2 DOFS = 1
 
 ! square root of the slip coef
-  Exported Variable 3 = Beta
-  Exported Variable 3 DOFS = Integer 1
+  Exported Variable 2 = Beta
+  Exported Variable 2 DOFS = Integer 1
 ! derivative of the cost fn wr to beta
-  Exported Variable 4 = DJDBeta
-  Exported Variable 4 DOFS = Integer 1
+  Exported Variable 3 = DJDBeta
+  Exported Variable 3 DOFS = Integer 1
 ! value of the cost function
-  Exported Variable 5 = CostValue
-  Exported Variable 5 DOFS = Integer 1
+  Exported Variable 4 = CostValue
+  Exported Variable 4 DOFS = Integer 1
 
-  Exported Variable 6 = VsurfIni
-  Exported Variable 6 DOFS = Integer 2
+  Exported Variable 5 = VsurfIni
+  Exported Variable 5 DOFS = Integer 2
 
 End
 
@@ -298,15 +288,15 @@ Boundary Condition 1
   Target Boundaries(2) = 4 6
  
   Velocity 1 = Variable Coordinate 1
-    Real procedure "lib/UWA_Bnd.so" "UBnd"
+    Real procedure "lib/Init.so" "UWa"
   Velocity 2 = Variable Coordinate 1
-    Real procedure "lib/UWA_Bnd.so" "VBnd"
+    Real procedure "lib/Init.so" "VWa"
 
 
   VeloD 1 = Variable Coordinate 1
-    Real procedure "lib/UWA_Bnd.so" "UBnd"
+    Real procedure "lib/Init.so" "UWa"
   VeloD 2 = Variable Coordinate 1
-    Real procedure "lib/UWA_Bnd.so" "VBnd"
+    Real procedure "lib/Init.so" "VWa"
 
 End
 
@@ -317,15 +307,15 @@ Boundary Condition 2
 
 ! Dirichlet BCs
   Velocity 1 = Variable Coordinate 1
-    Real procedure "lib/UWA_Bnd.so" "UBnd"
+    Real procedure "lib/Init.so" "UWa"
   Velocity 2 = Variable Coordinate 1
-    Real procedure "lib/UWA_Bnd.so" "VBnd"
+    Real procedure "lib/Init.so" "VWa"
 
 !Dirichlet BC => Same Dirichlet 
   VeloD 1 = Variable Coordinate 1
-    Real procedure "lib/UWA_Bnd.so" "UBnd"
+    Real procedure "lib/Init.so" "UWa"
   VeloD 2 = Variable Coordinate 1
-    Real procedure "lib/UWA_Bnd.so" "VBnd"
+    Real procedure "lib/Init.so" "VWa"
 End
 
 

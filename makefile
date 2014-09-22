@@ -28,7 +28,7 @@ ExtrudeMesh: ExtrudeMesh.c
 ############################################################################
 ## Rules for building libraries used for external functions in Elmer      ##
 ############################################################################
-_SOURCES=USF_Init.f90 UWA_Bnd.f90 MU_Init.f90 Interp.f90
+_SOURCES=Init.f90 Interp.f90
 SOURCES = $(patsubst %,source/%,$(_SOURCES))
 
 _SOLVERS=$(_SOURCES:.f90=.so)
