@@ -139,7 +139,9 @@ if __name__ == "__main__":
     glaciers = ["helheim", "kangerd", "jakobshavn"]
 
     for glacier in glaciers:
-        if not os.path.exists(glacier + "/betaDEM.xy"):
+        if not (os.path.exists(glacier + "/betaDEM.xy")
+            and os.path.exists(glacier + "/UBDEM.xy"  )
+            and os.path.exists(glacier + "/VBDEM.xy"  )):
             #------------------------------------
             # Read in the ice surface velocities
             (x, y, u) = read_dem(glacier + "/UDEM.xy")
@@ -156,15 +158,12 @@ if __name__ == "__main__":
             nxd = len(xd)
             nyd = len(yd)
 
-            dxd = xd[1] - xd[0]
-            dyd = yd[1] - yd[0]
-
 
             #----------------------------------
             # Smooth the ice surface elevation
             for i in range(1, nyd - 1):
                 for j in range(1, nxd - 1):
-                    sd[i, j] = (4 * sd[i, j] + 
+                    sd[i, j] = (4 * sd[i, j] +
                                     sd[i + 1, j] + sd[i - 1, j] +
                                     sd[i, j + 1] + sd[i, j - 1]) / 8.0
 
@@ -189,17 +188,28 @@ if __name__ == "__main__":
 
             for i in range(ny):
                 for j in range(nx):
-                    beta[i, j] = max(beta[i, j], 0.0015)
+                    if beta[i, j] != -2.0e+9:
+                        beta[i, j] = max(beta[i, j], 0.015)
 
 
             #---------------------------------
             # Write the results out to a file
             fidbeta = open(glacier + "/betaDEM.xy", "w")
+            fidub   = open(glacier + "/UBDEM.xy", "w")
+            fidvb   = open(glacier + "/VBDEM.xy", "w")
             fidbeta.write('{0}\n{1}\n'.format(nx, ny))
+            fidub.write('{0}\n{1}\n'.format(nx, ny))
+            fidvb.write('{0}\n{1}\n'.format(nx, ny))
 
             for j in range(nx):
                 for i in range(ny):
-                    fidbeta.write('{0} {1} {2}\n'.format(x[j], y[i], beta[i, j]))
+                    fidbeta.write("{0} {1} {2}".format(x[j], y[i], beta[i, j]))
+                    fidub.write("{0} {1} {2}".format(x[j], y[i], ub[i, j]))
+                    fidvb.write("{0} {1} {2}".format(x[j], y[i], vb[i, j]))
+
+            fidbeta.close()
+            fidub.close()
+            fidvb.close()
 
 
             print("Done computing basal fields for " + glacier)
