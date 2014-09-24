@@ -8,7 +8,7 @@
 data:
 	cd data && ./make_data.py && cd ../
 
-dems:
+dems: data
 	cd dems && ./make_dems.py && ./postprocess_jak.py && ./make_beta.py && cd ../
 
 
@@ -16,7 +16,7 @@ dems:
 ############################################################################
 ## Rules for making meshes                                                ##
 ############################################################################
-meshes: ExtrudeMesh data
+meshes: ExtrudeMesh dems
 	cd meshes && ./make_meshes.py && cd ../
 	cd elmer && ./make_elmer_meshes.py && cd ../
 
