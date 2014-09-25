@@ -347,6 +347,8 @@
         if (Firsttime) then
                 Firsttime=.False.
 
+                call get_environment_variable('glacier', glacier)
+
         ! open file
                 open(10,file='dems/'//trim(glacier)//'/betaDEM.xy')
                 Read(10,*) nx

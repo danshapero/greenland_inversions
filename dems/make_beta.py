@@ -203,9 +203,9 @@ if __name__ == "__main__":
 
             for j in range(nx):
                 for i in range(ny):
-                    fidbeta.write("{0} {1} {2}".format(x[j], y[i], beta[i, j]))
-                    fidub.write("{0} {1} {2}".format(x[j], y[i], ub[i, j]))
-                    fidvb.write("{0} {1} {2}".format(x[j], y[i], vb[i, j]))
+                    fidbeta.write("{0} {1} {2}\n".format(x[j], y[i], beta[i, j]))
+                    fidub.write("{0} {1} {2}\n".format(x[j], y[i], ub[i, j]))
+                    fidvb.write("{0} {1} {2}\n".format(x[j], y[i], vb[i, j]))
 
             fidbeta.close()
             fidub.close()
