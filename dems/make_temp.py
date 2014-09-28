@@ -51,8 +51,8 @@ def read_kristin_data(filename):
     T = []
     A = []
 
-    X.append([x[0]])
-    Y.append([y[0]])
+    X.append(x[0])
+    Y.append(y[0])
     Z.append([z[0]])
     T.append([t[0]])
     A.append([a[0]])
@@ -65,8 +65,8 @@ def read_kristin_data(filename):
             T[k].append(t[n])
             A[k].append(a[n])
         else:
-            X.append([x[n]])
-            Y.append([y[n]])
+            X.append(x[n])
+            Y.append(y[n])
             Z.append([z[n]])
             T.append([t[n]])
             A.append([a[n]])
@@ -114,5 +114,25 @@ if __name__ == "__main__":
             X, Y, Z, T, A = read_kristin_data(infile)
 
             # Make a gridded data set from the model output
+            # Set the number of vertical layers
+            nz = 21
+            a = np.zeros((ny, nx, nz))
 
+            for n in range(len(X)):
+                if (X[n] > xmin and X[n] < xmax
+                    and Y[n] > ymin and Y[n] < ymax):
+                    i = int( (Y[n] - y[0])/dy )
+                    j = int( (X[n] - x[0])/dx )
 
+                    zmin = np.min(Z[n]) + 1.0e-2
+                    zmax = np.max(Z[n]) - 1.0e-2
+
+                    dz = (zmax - zmin) / (nz - 1)
+
+                    l = 0
+                    for k in range(nz):
+                        z = zmin + k * dz
+                        while Z[n][l] > z:
+                            l += 1
+
+                        a[i, j, k] = A[n][l] + (z - Z[n][l])/dz * A[n][l + 1]
