@@ -19,9 +19,10 @@ def read_kristin_data(filename):
 
     Outputs
     -------
-    x, y, z : coordinates of the data poins
-    T       : numpy array of modelled temperature values at each data point
-    A       : numpy array of the viscosity at each point
+    X, Y : coordinates of the data points
+    Z    : list of numpy arrays of the vertical coordinates in each column
+    T    : list of numpy arrays of the temperature
+    A    : list of numpy arrays of the fluidity
     """
     x = []
     y = []
@@ -87,6 +88,19 @@ def read_kristin_data(filename):
 
 
 
+def low_pass_filter(q, iters):
+    ny, nx = np.shape(q)
+
+    def lpf(q):
+        for i in range(1, ny - 1):
+            for j in range(1, nx - 1):
+                q[i, j] = (4 * q[i, j] + q[i + 1, j] + q[i - 1, j]
+                                        + q[i, j + 1] + q[i, j - 1]) / 8
+
+    for k in range(iters):
+        lpf(q)
+
+
 
 glaciers = ["helheim", "kangerd", "jakobshavn"]
 
@@ -137,7 +151,10 @@ if __name__ == "__main__":
                 a[:, :, k] = griddata((X, Y), ak, (xg, yg), method = 'nearest')
 
 
-            # TODO Smooth over the gridded data
+            # Smooth over the gridded data
+            for k in range(nz):
+                low_pass_filter(a[:, :, k], 8)
+                        
 
 
             # Write the gridded data to a file
@@ -150,3 +167,4 @@ if __name__ == "__main__":
                     for k in range(nx):
                         fid.write("{0} ".format(a[i, j, k]))
                     fid.write("\n")
+
