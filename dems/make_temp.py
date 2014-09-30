@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
+from scipy.interpolate import interp2d, griddata
 
 import sys
 sys.path.insert(0, '../scripts')
@@ -98,6 +99,7 @@ if __name__ == "__main__":
             x, y, vx = read_dem(glacier + "/UDEM.xy")
 
             ny, nx = np.shape(vx)
+            mask = vx != -2.0e+9
 
             dx = x[1] - x[0]
             dy = y[1] - y[0]
@@ -118,21 +120,33 @@ if __name__ == "__main__":
             nz = 21
             a = np.zeros((ny, nx, nz))
 
-            for n in range(len(X)):
-                if (X[n] > xmin and X[n] < xmax
-                    and Y[n] > ymin and Y[n] < ymax):
-                    i = int( (Y[n] - y[0])/dy )
-                    j = int( (X[n] - x[0])/dx )
+            xg, yg = np.meshgrid(x, y)
 
+            ak = np.zeros(len(X))
+            for k in range(nz):
+                for n in range(len(X)):
                     zmin = np.min(Z[n]) + 1.0e-2
                     zmax = np.max(Z[n]) - 1.0e-2
-
                     dz = (zmax - zmin) / (nz - 1)
-
+                    z = zmin + k * dz
                     l = 0
-                    for k in range(nz):
-                        z = zmin + k * dz
-                        while Z[n][l] > z:
-                            l += 1
+                    while Z[n][l] > z:
+                        l += 1
+                    ak[n] = A[n][l] + (z - Z[n][l])/dz * A[n][l + 1]
 
-                        a[i, j, k] = A[n][l] + (z - Z[n][l])/dz * A[n][l + 1]
+                a[:, :, k] = griddata((X, Y), ak, (xg, yg), method = 'nearest')
+
+
+            # TODO Smooth over the gridded data
+
+
+            # Write the gridded data to a file
+            fid = open(outfile)
+            fid.write("{0} {1} {2}\n".format(nx, ny, nz))
+
+            for i in range(ny):
+                for j in range(nx):
+                    fid.write("{0} {1} ".format(x[j], y[i]))
+                    for k in range(nx):
+                        fid.write("{0} ".format(a[i, j, k]))
+                    fid.write("\n")
