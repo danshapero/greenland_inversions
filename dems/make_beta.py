@@ -74,8 +74,7 @@ def compute_basal_fields(x, y, s, b, u, v):
     ub = np.zeros((ny, nx))
     vb = np.zeros((ny, nx))
 
-    # First use the SIA approximation to get a rough estimate of the bed
-    # sliding velocity
+    # First use SIA to get a rough estimate of the bed sliding velocity
     for i in range(1, ny - 1):
         for j in range(1, nx - 1):
             if u[i, j] != -2.0e+9:
@@ -116,13 +115,20 @@ def compute_basal_fields(x, y, s, b, u, v):
 
     #-------------------------------------
     # Compute the basal sliding parameter
+
+    # Chooe some fraction of the driving stress for the basal shear stress
+    # to support
+    frac = 0.9
+
+    # beta = stress / speed
     beta = np.zeros((ny, nx))
     for i in range(ny):
         for j in range(nx):
             if u[i, j] != -2.0e+9:
                 h = max(s[i, j] - b[i, j], 0.0)
                 dp = min(ub[i, j] * dsdx[i, j] + vb[i, j] * dsdy[i, j], 0.0)
-                beta[i, j] = -rho*g*h*dp / (ub[i, j]**2 + vb[i, j]**2 + 30.0)
+                sb = np.sqrt(ub[i, j]**2 + vb[i, j]**2)
+                beta[i, j] = -frac * rho * g * h * dp / (sb**2 + 30.0)
 
     beta = np.sqrt(beta)
 
