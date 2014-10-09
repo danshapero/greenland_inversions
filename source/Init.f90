@@ -438,5 +438,75 @@
 
 
         !------------------------------------------------------------------!
+        Function MuIni( Model, nodenumber, dumy) RESULT(U)                 !
+        !------------------------------------------------------------------!
+        USE types
+
+        implicit none
+        TYPE(Model_t) :: Model
+        Real(kind=dp) :: dumy,U
+        INTEGER :: nodenumber
+
+        Real(kind=dp), allocatable :: dem(:,:,:), xx(:), yy(:)
+        Real(kind=dp) :: LinearInterp
+
+        integer :: nx, ny, nz
+        integer :: i, j, k
+
+        character(len=16) :: glacier
+
+        logical :: Firsttime = .true.
+
+        Real(kind=dp) :: x, y, z, zs, zb, dz
+
+        SAVE dem, xx, yy, nx, ny
+        SAVE Firsttime
+
+        if (Firsttime) then
+            Firsttime = .false.
+
+            call get_environment_variable('glacier', glacier)
+
+            open(10, file = 'dems/' // trim(glacier) // '/ADEM.xy')
+            Read(10, *) nx
+            Read(10, *) ny
+            Read(10, *) nz
+
+            allocate(xx(nx), yy(ny))
+            allocate(dem(nx, ny, nz))
+
+            do i = 1, nx
+                do j = 1, ny
+                    read(10, *) xx(i), yy(j), dem(i, j, :)
+                End do
+            End do
+
+            close(10)
+        End if
+
+        x = Model % Nodes % x (nodenumber)
+        y = Model % Nodes % y (nodenumber)
+        z = Model % Nodes % z (nodenumber)
+
+        z = max(zb + 0.5, z)
+        z = min(zs - 0.5, z)
+
+        zs = zsIni( Model, nodenumber, dumy )
+        zb = zbIni( Model, nodenumber, dumy )
+
+        dz = (zb - zs) / nz
+
+        k = int( (z - zb) / (zs - zb) * nz) + 1
+
+        alpha = (z - (zb + (k - 1) * dz)) / dz
+        U = (1 - alpha) * LinearInterp(dem(:,:,k), xx, yy, nx, ny, x, y) &
+              & + alpha * LinearInterp(dem(:,:,k+1), xx, yy, nx, ny, x, y)
+
+        Return
+        End
+
+
+
+        !------------------------------------------------------------------!
         include 'Interp.f90'                                               !
         !------------------------------------------------------------------!

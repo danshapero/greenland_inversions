@@ -3,6 +3,7 @@
 import numpy as np
 from scipy.interpolate import interp2d, griddata
 
+import os
 import sys
 sys.path.insert(0, '../scripts')
 
@@ -158,8 +159,8 @@ if __name__ == "__main__":
 
 
             # Write the gridded data to a file
-            fid = open(outfile)
-            fid.write("{0} {1} {2}\n".format(nx, ny, nz))
+            fid = open(outfile, "w")
+            fid.write("{0}\n{1}\n{2}\n".format(nx, ny, nz))
 
             for i in range(ny):
                 for j in range(nx):
@@ -168,3 +169,4 @@ if __name__ == "__main__":
                         fid.write("{0} ".format(a[i, j, k]))
                     fid.write("\n")
 
+            fid.close()
