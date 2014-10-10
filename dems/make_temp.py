@@ -103,7 +103,8 @@ def low_pass_filter(q, iters):
 
 
 
-glaciers = ["helheim", "kangerd", "jakobshavn"]
+#glaciers = ["helheim", "kangerd", "jakobshavn"]    # Need to get this from KP
+glaciers = ["helheim", "kangerd"]
 
 
 if __name__ == "__main__":
@@ -154,7 +155,7 @@ if __name__ == "__main__":
 
             # Smooth over the gridded data
             for k in range(nz):
-                low_pass_filter(a[:, :, k], 8)
+                low_pass_filter(a[:, :, k], 4)
                         
 
 
@@ -165,7 +166,7 @@ if __name__ == "__main__":
             for i in range(ny):
                 for j in range(nx):
                     fid.write("{0} {1} ".format(x[j], y[i]))
-                    for k in range(nx):
+                    for k in range(nz):
                         fid.write("{0} ".format(a[i, j, k]))
                     fid.write("\n")
 
