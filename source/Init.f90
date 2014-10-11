@@ -458,6 +458,7 @@
         logical :: Firsttime = .true.
 
         Real(kind=dp) :: x, y, z, zs, zb, dz
+        Real(kind=dp), parameter :: year = 3.15567d7
 
         SAVE dem, xx, yy, nx, ny
         SAVE Firsttime
@@ -488,19 +489,31 @@
         y = Model % Nodes % y (nodenumber)
         z = Model % Nodes % z (nodenumber)
 
+        ! Make sure the elevation of the current point isn't above or
+        ! below the glacier
         z = max(zb + 0.5, z)
         z = min(zs - 0.5, z)
 
         zs = zsIni( Model, nodenumber, dumy )
         zb = zbIni( Model, nodenumber, dumy )
 
-        dz = (zb - zs) / nz
+        dz = (zb - zs) / (nz - 1)
 
+        ! Find which vertical layer the current point belongs to
         k = int( (z - zb) / (zs - zb) * nz) + 1
 
+        ! Interpolate the value of the fluidity parameter `A` from nearby
+        ! points in the layers above and below it
         alpha = (z - (zb + (k - 1) * dz)) / dz
         U = (1 - alpha) * LinearInterp(dem(:,:,k), xx, yy, nx, ny, x, y) &
               & + alpha * LinearInterp(dem(:,:,k+1), xx, yy, nx, ny, x, y)
+
+        ! The viscosity coefficient is the fluidity parameter `A` to the
+        ! -1/3 power in units of Pa * s^(1/3)
+        U = 0.5 * U**(-1.0/3.0)
+
+        ! Adjust for using MPa - m - years instead of MKS
+        U = U * 1.0e-6 * year**(-1.0/3.0)
 
         Return
         End
