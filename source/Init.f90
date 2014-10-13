@@ -448,7 +448,7 @@
         INTEGER :: nodenumber
 
         Real(kind=dp), allocatable :: dem(:,:,:), xx(:), yy(:)
-        Real(kind=dp) :: LinearInterp
+        Real(kind=dp) :: LinearInterp, zsIni, zbIni
 
         integer :: nx, ny, nz
         integer :: i, j, k
@@ -457,7 +457,7 @@
 
         logical :: Firsttime = .true.
 
-        Real(kind=dp) :: x, y, z, zs, zb, dz
+        Real(kind=dp) :: x, y, z, zs, zb, dz, alpha
         Real(kind=dp), parameter :: year = 3.15567d7
 
         SAVE dem, xx, yy, nx, ny
@@ -489,13 +489,13 @@
         y = Model % Nodes % y (nodenumber)
         z = Model % Nodes % z (nodenumber)
 
+        zs = zsIni( Model, nodenumber, dumy )
+        zb = zbIni( Model, nodenumber, dumy )
+
         ! Make sure the elevation of the current point isn't above or
         ! below the glacier
         z = max(zb + 0.5, z)
         z = min(zs - 0.5, z)
-
-        zs = zsIni( Model, nodenumber, dumy )
-        zb = zbIni( Model, nodenumber, dumy )
 
         dz = (zb - zs) / (nz - 1)
 

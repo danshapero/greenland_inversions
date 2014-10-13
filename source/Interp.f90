@@ -4,7 +4,7 @@
         USE TYPES
         implicit none
         
-        REAL(KIND=dp) :: dem(:,:), xx(:), yy(:)
+        REAL(KIND=dp) :: dem(nx,ny), xx(nx), yy(ny)
         REAL(KIND=dp) :: Dx,Dy,DxDy
         Real(kind=dp) :: x,y,x_1,y_1,dist,B(4)
         Real(kind=dp) :: InterP1
