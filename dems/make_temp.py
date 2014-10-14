@@ -156,18 +156,19 @@ if __name__ == "__main__":
             # Smooth over the gridded data
             for k in range(nz):
                 low_pass_filter(a[:, :, k], 4)
-                        
 
 
             # Write the gridded data to a file
             fid = open(outfile, "w")
             fid.write("{0}\n{1}\n{2}\n".format(nx, ny, nz))
 
-            for i in range(ny):
-                for j in range(nx):
+            for j in range(nx):
+                for i in range(ny):
                     fid.write("{0} {1} ".format(x[j], y[i]))
                     for k in range(nz):
                         fid.write("{0} ".format(a[i, j, k]))
                     fid.write("\n")
 
             fid.close()
+
+            print("Done computing flow law parameter for " + glacier)
