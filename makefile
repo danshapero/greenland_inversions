@@ -9,7 +9,7 @@ data:
 	cd data && ./make_data.py && cd ../
 
 dems: data
-	cd dems && ./make_dems.py && ./postprocess_jak.py && ./make_beta.py && cd ../
+	cd dems && ./make_dems.py && ./postprocess_jak.py && ./make_beta.py && ./make_temp.py && cd ../
 
 
 
