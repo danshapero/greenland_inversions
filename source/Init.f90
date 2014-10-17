@@ -497,7 +497,7 @@
         z = max(zb + 0.5, z)
         z = min(zs - 0.5, z)
 
-        dz = (zb - zs) / (nz - 1)
+        dz = (zs - zb) / (nz - 1)
 
         ! Find which vertical layer the current point belongs to
         k = int( (z - zb) / (zs - zb) * nz) + 1
