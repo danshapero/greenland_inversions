@@ -460,7 +460,7 @@
         Real(kind=dp) :: x, y, z, zs, zb, dz, alpha
         Real(kind=dp), parameter :: year = 3.15567d7
 
-        SAVE dem, xx, yy, nx, ny
+        SAVE dem, xx, yy, nx, ny, nz
         SAVE Firsttime
 
         if (Firsttime) then
@@ -492,15 +492,13 @@
         zs = zsIni( Model, nodenumber, dumy )
         zb = zbIni( Model, nodenumber, dumy )
 
-        ! Make sure the elevation of the current point isn't above or
-        ! below the glacier
+        dz = (zs - zb) / (nz - 1)
+
         z = max(zb + 0.5, z)
         z = min(zs - 0.5, z)
 
-        dz = (zs - zb) / (nz - 1)
-
         ! Find which vertical layer the current point belongs to
-        k = int( (z - zb) / (zs - zb) * nz) + 1
+        k = int( (z - zb) / dz ) + 1
 
         ! Interpolate the value of the fluidity parameter `A` from nearby
         ! points in the layers above and below it
