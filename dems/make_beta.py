@@ -159,24 +159,24 @@ if __name__ == "__main__":
 
             #--------------------------------------------
             # Read in the ice surface and bed elevations
-            (xd, yd, sd) = read_dem(glacier + "/zsDEM.xy")
-            (xd, yd, bd) = read_dem(glacier + "/zbDEM.xy")
-            nxd = len(xd)
-            nyd = len(yd)
+            (xs, ys, sd) = read_dem(glacier + "/zsDEM.xy")
+            (xb, yb, bd) = read_dem(glacier + "/zbDEM.xy")
+            nxs = len(xs)
+            nys = len(ys)
 
 
             #----------------------------------
             # Smooth the ice surface elevation
-            for i in range(1, nyd - 1):
-                for j in range(1, nxd - 1):
+            for i in range(1, nys - 1):
+                for j in range(1, nxs - 1):
                     sd[i, j] = (4 * sd[i, j] +
                                     sd[i + 1, j] + sd[i - 1, j] +
                                     sd[i, j + 1] + sd[i, j - 1]) / 8.0
 
 
             # Interpolate the elevation data to the grid for velocity
-            sf = interpolate.RectBivariateSpline(xd, yd, sd.T)
-            bf = interpolate.RectBivariateSpline(xd, yd, bd.T)
+            sf = interpolate.RectBivariateSpline(xs, ys, sd.T)
+            bf = interpolate.RectBivariateSpline(xb, yb, bd.T)
             s = np.zeros((ny, nx))
             b = np.zeros((ny, nx))
 
@@ -185,7 +185,7 @@ if __name__ == "__main__":
                     s[i, j] = sf(x[j], y[i])
                     b[i, j] = bf(x[j], y[i])
 
-            del sf, bf, xd, yd, sd, bd
+            del sf, bf, xs, ys, sd, xb, yb, bd
 
 
             #----------------------------------------------
