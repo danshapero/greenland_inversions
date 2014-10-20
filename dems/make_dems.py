@@ -107,6 +107,7 @@ if not os.path.exists("jakobshavn/zsDEM.xy"):
 
     # write out the surface data in the format Elmer expects
     fid = open("jakobshavn/zsDEM.xy", "w")
+    fid.write("{0}\n{1}\n".format(nx, ny))
     for j in range(nx):
         for i in range(ny):
             fid.write('{0} {1} {2}\n'.format(x[j], y[i], s[i, j]))

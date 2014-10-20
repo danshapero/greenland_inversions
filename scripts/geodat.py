@@ -57,36 +57,37 @@ def read_geodat(filename):
     data = arr.reshape((ny, nx))
 
     # Find weird points.
-    for i in range(1, ny - 1):
-        for j in range(1, nx - 1):
-            # A point with no data but which has four cardinal neighbors
-            # that does can rasonably have data interpolated from them
-            if data[i, j] == -2e+9:
-                nbrs = [ [i+1, i-1, i,   i  ],
-                         [j,   j,   j+1, j-1] ]
-                k = sum( data[nbrs[0], nbrs[1]] != -2e+9 )
-                if k == 4:
-                    data[i,j] = sum( data[nbrs[0],nbrs[1]] )/4.0
+    if np.min(data) == -2.0e+9:
+        for i in range(1, ny - 1):
+            for j in range(1, nx - 1):
+                # A point with no data but which has four cardinal neighbors
+                # that does can rasonably have data interpolated from them
+                if data[i, j] == -2e+9:
+                    nbrs = [ [i+1, i-1, i,   i  ],
+                             [j,   j,   j+1, j-1] ]
+                    k = sum( data[nbrs[0], nbrs[1]] != -2e+9 )
+                    if k == 4:
+                        data[i,j] = sum( data[nbrs[0],nbrs[1]] )/4.0
 
-            # A point which does have data but for which only one of its
-            # neighbors neighbors does should not have data
-            else:
-                nbrs = [ [i+1, i+1, i+1, i,   i,   i-1, i-1, i-1],
-                         [j+1, j,   j-1, j+1, j-1, j+1, j,   j-1] ]
-                k = sum( data[nbrs[0],nbrs[1]]!=-2e+9 )
-                if k <= 1:
-                    data[i,j] = -2e+9
-                    data[i,j] = -2e+9
+                # A point which does have data but for which only one of its
+                # neighbors neighbors does should not have data
+                else:
+                    nbrs = [ [i+1, i+1, i+1, i,   i,   i-1, i-1, i-1],
+                             [j+1, j,   j-1, j+1, j-1, j+1, j,   j-1] ]
+                    k = sum( data[nbrs[0],nbrs[1]]!=-2e+9 )
+                    if k <= 1:
+                        data[i,j] = -2e+9
+                        data[i,j] = -2e+9
 
-    for i in range(1, ny - 1):
-        for j in range(1, nx - 1):
-            if data[i,j] != -2e+9:
-                nbrs = [ [i+1, i+1, i+1, i,   i,   i-1, i-1, i-1],
-                         [j+1, j,   j-1, j+1, j-1, j+1, j,   j-1] ]
-                k = sum( data[nbrs[0], nbrs[1]] != -2e+9 )
-                if k < 4:
-                    data[i,j] = -2e+9
-                    data[i,j] = -2e+9
+        for i in range(1, ny - 1):
+            for j in range(1, nx - 1):
+                if data[i,j] != -2e+9:
+                    nbrs = [ [i+1, i+1, i+1, i,   i,   i-1, i-1, i-1],
+                             [j+1, j,   j-1, j+1, j-1, j+1, j,   j-1] ]
+                    k = sum( data[nbrs[0], nbrs[1]] != -2e+9 )
+                    if k < 4:
+                        data[i,j] = -2e+9
+                        data[i,j] = -2e+9
 
     return x, y, data
 
