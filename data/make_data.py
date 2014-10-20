@@ -46,17 +46,11 @@ for glacier in glacier_data.keys():
 
 
 # -----------------------------
-# Retrieve DEMs for Jakobshavn
+# Retrieve data for Jakobshavn
 # -----------------------------
 
 url = "http://students.washington.edu/shapero/jakobshavn/"
 if not os.path.exists("jakobshavn/dem13Mar.smooth"):
     os.system("wget " + url + "dem13Mar.smooth -P jakobshavn")
     os.system("wget " + url + "dem13Mar.smooth.geodat -P jakobshavn")
-
-if not os.path.exists("jakobshavn/Jakobshavn_2006_2009_Composite.zip"):
-    os.system("wget https://data.cresis.ku.edu/data/grids/"
-                    "Jakobshavn_2006_2009_Composite.zip -P jakobshavn")
-
-
 
