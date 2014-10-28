@@ -27,7 +27,7 @@ for glacier in glacier_data.keys():
         os.makedirs(glacier)
             
 
-# Retrieve data
+# Retrieve velocity data
 extensions = ['.vx', '.vx.geodat', '.vy', '.vy.geodat',
                 '.ex', '.ex.geodat', '.ey', '.ey.geodat', '.meta']
 for glacier in glacier_data.keys():
@@ -37,4 +37,13 @@ for glacier in glacier_data.keys():
             if not os.path.exists(glacier+'/'+filename):
                 url = glacier_data[glacier][filestem] + filename
                 os.system('wget '+url+' -P '+glacier)
+
+
+# Retrieve temperature / rheology data
+url = "http://students.washington.edu/shapero/"
+for glacier in ["helheim", "kangerd"]:          # Don't have Jakobshavn yet
+    filename = 'xyzTA' + glacier + '.txt'
+    if not os.path.exists(glacier + '/' + filename):
+        os.system('wget ' + url + glacier + '/' + filename + ' -P ' + glacier)
+
 
