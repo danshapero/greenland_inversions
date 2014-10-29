@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
-from scipy.interpolate import interp2d, griddata
+from scipy.spatial import cKDTree
 
 import os
 import sys
@@ -109,13 +109,14 @@ glaciers = ["helheim", "kangerd"]
 
 if __name__ == "__main__":
     for glacier in glaciers:
-        outfile = glacier + "/ADEM.xy"
+        outfile = glacier + "/TDEM.xy"
         if not os.path.exists(outfile):
+            # ---------------------------------------------
             # Find the domain size for the current glacier
             x, y, vx = read_dem(glacier + "/UDEM.xy")
 
             ny, nx = np.shape(vx)
-            mask = vx != -2.0e+9
+            del vx
 
             dx = x[1] - x[0]
             dy = y[1] - y[0]
@@ -125,39 +126,65 @@ if __name__ == "__main__":
             ymin = y[0]
             ymax = y[-1]
 
-            del vx
-
+            # -------------------------------
             # Read in Kristin's model output
             infile = "../data/" + glacier + "/xyzTA" + glacier + ".txt"
             X, Y, Z, T, A = read_kristin_data(infile)
 
-            # Make a gridded data set from the model output
             # Set the number of vertical layers
             nz = 21
-            temp = 257 * np.ones((ny, nx, nz))
 
-            for n in range(len(X)):
-                i = int( (Y[n] - y[0])/dy )
-                j = int( (X[n] - x[0])/dx )
-
-                if i >= 0 and i < ny-1 and j >= 0 and j < nx-1:
-                    zmin = Z[n][ 0] + 1.0e-2
-                    zmax = Z[n][-1] - 1.0e-2
-                    dz = (zmax - zmin) / (nz - 1)
-                    for k in range(nz):
-                        z = zmin + k * dz
-
-                        l = -1
-                        while Z[n][l] > z:
-                            l -= 1
-                        alpha = (z - Z[n][l])/dz
-                        a = (1 - alpha) * T[n][l] + alpha * T[n][l + 1]
-                        temp[i  , j  , k] = a
-                        temp[i+1, j  , k] = a
-                        temp[i  , j+1, k] = a
-                        temp[i+1, j+1, k] = a
+            # Make the default temperature -10C
+            temp = 263 * np.ones((ny, nx, nz))
+            mask = np.zeros((ny, nx), dtype = bool)
 
 
+            # ----------------------------------------------
+            # Make a gridded data set from the model output
+
+            pts = np.zeros((len(X), 2))
+            pts[:,0] = X
+            pts[:,1] = Y
+
+            # Make a KD-tree so we can do range searches fast
+            tree = cKDTree(pts)
+
+            # For each point in the grid,
+            for i in range(ny):
+                for j in range(nx):
+                    # find all the model points within 1km of it.
+                    L = tree.query_ball_point( (x[j], y[i]), 1000 )
+
+                    # Initialize the weights to 1; if there aren't any
+                    # other nearby model points to interpolate from, we'll
+                    # keep the temperature value at -10C
+                    weights = 1.0
+
+                    # For all the nearby model points,
+                    for l in L:
+                        xp = X[l]
+                        yp = Y[l]
+
+                        # find the distance to the current point and the
+                        # appropriate weight
+                        r = np.sqrt( (x[j] - xp)**2 + (y[i] - yp)**2 )
+                        w = (1000/(r+dx))**3
+                        weights += w
+
+                        # For each point within the current vertical column,
+                        for k in range(nz):
+                            # find which point within the nearby vertical
+                            # column to interpolate from
+                            m = (k * len(Z[l])) / (nz - 1)
+
+                            # Add up the value to the running average
+                            temp[i, j, k] += w * T[l][m]
+
+                    # Normalize the running average by the weight sum
+                    temp[i,j,k] /= weights
+
+
+            # ---------------------------------
             # Write the gridded data to a file
             fid = open(outfile, "w")
             fid.write("{0}\n{1}\n{2}\n".format(nx, ny, nz))
