@@ -134,28 +134,26 @@ if __name__ == "__main__":
             # Make a gridded data set from the model output
             # Set the number of vertical layers
             nz = 21
-            a = np.zeros((ny, nx, nz))
+            temp = 257 * np.ones((ny, nx, nz))
 
-            xg, yg = np.meshgrid(x, y)
+            for n in range(len(X)):
+                i = int( (Y[n] - y[0])/dy )
+                j = int( (X[n] - x[0])/dx )
 
-            ak = np.zeros(len(X))
-            for k in range(nz):
-                for n in range(len(X)):
-                    zmin = np.min(Z[n]) + 1.0e-2
-                    zmax = np.max(Z[n]) - 1.0e-2
-                    dz = (zmax - zmin) / (nz - 1)
+                zmin = Z[n][ 0] + 1.0e-2
+                zmax = Z[n][-1] - 1.0e-2
+                dz = (zmax - zmin) / (nz - 1)
+                for k in range(nz):
                     z = zmin + k * dz
+
                     l = 0
                     while Z[n][l] > z:
                         l += 1
-                    ak[n] = A[n][l] + (z - Z[n][l])/dz * A[n][l + 1]
-
-                a[:, :, k] = griddata((X, Y), ak, (xg, yg), method = 'nearest')
-
-
-            # Smooth over the gridded data
-            for k in range(nz):
-                low_pass_filter(a[:, :, k], 4)
+                    a = T[n][l] + (z - Z[n][l])/dz * T[n][l + 1]
+                    temp[i  , j  , k] = a
+                    temp[i+1, j  , k] = a
+                    temp[i  , j+1, k] = a
+                    temp[i+1, j+1, k] = a
 
 
             # Write the gridded data to a file
@@ -166,7 +164,7 @@ if __name__ == "__main__":
                 for i in range(ny):
                     fid.write("{0} {1} ".format(x[j], y[i]))
                     for k in range(nz):
-                        fid.write("{0} ".format(a[i, j, k]))
+                        fid.write("{0} ".format(temp[i, j, k]))
                     fid.write("\n")
 
             fid.close()
