@@ -140,20 +140,22 @@ if __name__ == "__main__":
                 i = int( (Y[n] - y[0])/dy )
                 j = int( (X[n] - x[0])/dx )
 
-                zmin = Z[n][ 0] + 1.0e-2
-                zmax = Z[n][-1] - 1.0e-2
-                dz = (zmax - zmin) / (nz - 1)
-                for k in range(nz):
-                    z = zmin + k * dz
+                if i >= 0 and i < ny-1 and j >= 0 and j < nx-1:
+                    zmin = Z[n][ 0] + 1.0e-2
+                    zmax = Z[n][-1] - 1.0e-2
+                    dz = (zmax - zmin) / (nz - 1)
+                    for k in range(nz):
+                        z = zmin + k * dz
 
-                    l = 0
-                    while Z[n][l] > z:
-                        l += 1
-                    a = T[n][l] + (z - Z[n][l])/dz * T[n][l + 1]
-                    temp[i  , j  , k] = a
-                    temp[i+1, j  , k] = a
-                    temp[i  , j+1, k] = a
-                    temp[i+1, j+1, k] = a
+                        l = -1
+                        while Z[n][l] > z:
+                            l -= 1
+                        alpha = (z - Z[n][l])/dz
+                        a = (1 - alpha) * T[n][l] + alpha * T[n][l + 1]
+                        temp[i  , j  , k] = a
+                        temp[i+1, j  , k] = a
+                        temp[i  , j+1, k] = a
+                        temp[i+1, j+1, k] = a
 
 
             # Write the gridded data to a file
