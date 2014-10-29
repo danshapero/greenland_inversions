@@ -175,13 +175,13 @@ if __name__ == "__main__":
                         for k in range(nz):
                             # find which point within the nearby vertical
                             # column to interpolate from
-                            m = (k * len(Z[l])) / (nz - 1)
+                            m = (k * (len(Z[l]) - 1)) / (nz - 1)
 
                             # Add up the value to the running average
                             temp[i, j, k] += w * T[l][m]
 
                     # Normalize the running average by the weight sum
-                    temp[i,j,k] /= weights
+                    temp[i,j,:] /= weights
 
 
             # ---------------------------------
