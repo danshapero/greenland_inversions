@@ -458,7 +458,7 @@
         logical :: Firsttime = .true.
 
         Real(kind=dp) :: x, y, z, zs, zb, dz, alpha
-        Real(kind=dp), parameter :: year = 3.15567d7
+        Real(kind=dp), parameter :: year = 3.15567d7, R = 8.314e-3
 
         SAVE dem, xx, yy, nx, ny, nz
         SAVE Firsttime
@@ -500,17 +500,28 @@
         ! Find which vertical layer the current point belongs to
         k = int( (z - zb) / dz ) + 1
 
-        ! Interpolate the value of the fluidity parameter `A` from nearby
-        ! points in the layers above and below it
+        ! Interpolate the value of the temperature from nearby points in
+        ! the layers above and below it
         alpha = (z - (zb + (k - 1) * dz)) / dz
         U = (1 - alpha) * LinearInterp(dem(:,:,k), xx, yy, nx, ny, x, y) &
               & + alpha * LinearInterp(dem(:,:,k+1), xx, yy, nx, ny, x, y)
 
+        ! Compute the fluidity parameter in units of Pa * s from the
+        ! Arrhenius relation
+        A0 = 3.985d-13
+        Q = 60
+        if (U > 263.15) then
+            A0 = 1.916d3
+            Q = 139
+        endif
+
+        U = A0 * exp(-Q / (R*T))
+
         ! The viscosity coefficient is the fluidity parameter `A` to the
         ! -1/3 power in units of Pa * s^(1/3)
-        U = 0.5 * U**(-1.0/3.0)
+        U = U**(-1.0/3.0)
 
-        ! Adjust for using MPa - m - years instead of MKS
+        ! Adjust for using MPa - m - years instead of Pa - m - s
         U = U * 1.0e-6 * year**(-1.0/3.0)
 
         Return
