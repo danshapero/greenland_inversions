@@ -457,7 +457,7 @@
 
         logical :: Firsttime = .true.
 
-        Real(kind=dp) :: x, y, z, zs, zb, dz, alpha
+        Real(kind=dp) :: x, y, z, zs, zb, dz, alpha, A0, Q
         Real(kind=dp), parameter :: year = 3.15567d7, R = 8.314e-3
 
         SAVE dem, xx, yy, nx, ny, nz
@@ -468,7 +468,7 @@
 
             call get_environment_variable('glacier', glacier)
 
-            open(10, file = 'dems/' // trim(glacier) // '/ADEM.xy')
+            open(10, file = 'dems/' // trim(glacier) // '/TDEM.xy')
             Read(10, *) nx
             Read(10, *) ny
             Read(10, *) nz
@@ -515,7 +515,7 @@
             Q = 139
         endif
 
-        U = A0 * exp(-Q / (R*T))
+        U = A0 * exp(-Q / (R*U))
 
         ! The viscosity coefficient is the fluidity parameter `A` to the
         ! -1/3 power in units of Pa * s^(1/3)
