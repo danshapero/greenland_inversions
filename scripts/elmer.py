@@ -73,12 +73,12 @@ def get_variable(variable, directory, filename, partitions, verbose = False):  #
         start = sum(file_lengths[:p])
 
         # and open the .nodes file containing the location of each mesh point.
-        node_file = open(parts_directory + "part." + str(p + 1) + ".nodes")
+        node_file = open(parts_directory + "part." + str(p + 1) + ".nodes", "r")
         points = node_file.readlines()
 
         # Fill in all the geometry data stored in this partition's node file.
         for i in range(file_lengths[p]):
-            node, _, x, z, y = points[i].split()
+            node, _, x, y, z = points[i].split()
             data[start + i] = node, x, y, z, 0.0
 
         del points
@@ -89,7 +89,7 @@ def get_variable(variable, directory, filename, partitions, verbose = False):  #
 
         # Open the result file containing the data we're interested in
         data_file = open(os.path.normpath(directory)
-                            + "/" + filename + "." + str(p))
+                            + "/" + filename + "." + str(p), "r")
 
         # Find the line number within the result file where our field starts
         while 1:
@@ -112,8 +112,8 @@ def get_variable(variable, directory, filename, partitions, verbose = False):  #
         if verbose:
             print "    Done reading ", variable
 
-        data = np.sort(data, order = ['x', 'y', 'z'])
-        return data
+    data = np.sort(data, order = ['x', 'y', 'z'])
+    return data
 
 
 
