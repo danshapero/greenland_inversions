@@ -116,4 +116,27 @@ def get_variable(variable, directory, filename, partitions, verbose = False):  #
     return data
 
 
+# ---------------------------------------------------------------------------- #
+def get_layer(data, tb = "surf"):                                              #
+# ---------------------------------------------------------------------------- #
+    x = []
+    y = []
+    q = []
+
+    argm = np.argmax
+    if tb == "bottom":
+        argm = np.argmin
+
+    for x_val in np.unique(data['x']):
+        x_p = data[ data['x'] == x_val ]
+        for y_val in np.unique(x_p['y']):
+            y_p = x_p[ x_p['y'] == y_val ]
+            index = argm(y_p['z'])
+            p = y_p[index]
+            x.append(p[1])
+            y.append(p[2])
+            q.append(p[4])
+
+    return np.asarray(x), np.asarray(y), np.asarray(q)
+
 
