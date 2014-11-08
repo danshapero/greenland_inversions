@@ -117,14 +117,14 @@ def get_variable(variable, directory, filename, partitions, verbose = False):  #
 
 
 # ---------------------------------------------------------------------------- #
-def get_layer(data, tb = "surf"):                                              #
+def get_layer(data, surface = "top"):                                          #
 # ---------------------------------------------------------------------------- #
     x = []
     y = []
     q = []
 
     argm = np.argmax
-    if tb == "bottom":
+    if surface == "bottom":
         argm = np.argmin
 
     for x_val in np.unique(data['x']):
