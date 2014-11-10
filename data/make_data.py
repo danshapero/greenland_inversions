@@ -41,7 +41,7 @@ for glacier in glacier_data.keys():
 
 # Retrieve temperature / rheology data
 url = "http://students.washington.edu/shapero/"
-for glacier in ["helheim", "kangerd"]:          # Don't have Jakobshavn yet
+for glacier in ["helheim", "kangerd", "jakobshavn"]:
     filename = 'xyzTA' + glacier + '.txt'
     if not os.path.exists(glacier + '/' + filename):
         os.system('wget ' + url + glacier + '/' + filename + ' -P ' + glacier)

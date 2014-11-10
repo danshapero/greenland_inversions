@@ -103,9 +103,7 @@ def low_pass_filter(q, iters):
 
 
 
-#glaciers = ["helheim", "kangerd", "jakobshavn"]    # Need to get this from KP
-glaciers = ["helheim", "kangerd"]
-
+glaciers = ["helheim", "kangerd", "jakobshavn"]
 
 if __name__ == "__main__":
     for glacier in glaciers:

@@ -8,13 +8,6 @@ $name="Robin_Beta"
 ! Parametre de régularisation  
 $Lambda=1.0e10
 
-!Reference Viscosity used to construct surface velocities
-$ function MuSquare(tx) {\
-   yearinsec = 365.25*24*60*60;\
-   mu=sqrt(1.8e08);\
-  _MuSquare=mu*mu*1.0e-6*(2.0*yearinsec)^(-1.0/3.0);\
-}
-
 !some constants
 $yearinsec = 365.25*24*60*60
 $rhoi = 917.0/(1.0e6*yearinsec^2)  ! MPa - a - m
@@ -63,8 +56,8 @@ End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Initial Condition 1
-  MuS = Variable coordinate 1, Coordinate 2
-       REAL MATC "MuSquare(tx)"
+  MuS = Variable coordinate 1
+       Real procedure "lib/Init.so" "muIni"
  
 ! initial guess for (square root) slip coeff.
   Beta = Variable Coordinate 1
