@@ -2,6 +2,7 @@
 
 import sys
 sys.path.insert(0, "../scripts")
+import getopt
 
 from scipy.spatial import cKDTree
 from matplotlib.tri import *        # Note: need matplotlib 1.4.2
@@ -37,7 +38,7 @@ def reconcile_elmer_with_mesh(xt, yt, xe, ye):                                 #
 
 
 # ---------------------------------------------------------------------------- #
-def get_field(field, glacier, partitions, mesh, surface = "bottom"):           #
+def get_field(field, directory, partitions, mesh, surface = "bottom"):         #
 # ---------------------------------------------------------------------------- #
     '''
     Get the values of a field from Elmer's output on either the top or bottom
@@ -56,7 +57,6 @@ def get_field(field, glacier, partitions, mesh, surface = "bottom"):           #
     =======
     q: the desired field, reconciled to the node ordering of `mesh`
     '''
-    directory = glacier + "3d"
     filename = "Test_Robin_Beta.result"
 
     data = get_variable(field, directory, filename, partitions)
@@ -67,20 +67,50 @@ def get_field(field, glacier, partitions, mesh, surface = "bottom"):           #
 
 
 # ---------------------------------------------------------------------------- #
-if __name__ == "__main__":                                                     #
+def main(argv):                                                                #
 # ---------------------------------------------------------------------------- #
-    glacier = sys.argv[1]
+    mesh_file = ''
+    elmer_dir = ''
+    out_file  = ''
 
-    # First, load in the Triangle mesh for the glacier
-    mesh_file_stem = "../meshes/" + glacier + "/" + glacier + ".2"
-    xm, ym, ele, bnd = read_triangle_mesh(mesh_file_stem)
+    helps = ("Script to postprocess Elmer output into QGIS format.\n\n"
+             "Usage: python postprocess.py -m <mesh file stem>"
+                    " -e <Elmer output dir> -o <output file name>\n"
+             "mesh file stem: path to Triangle mesh and file stem, e.g.\n"
+             "    /home/daniel/greenland_inversions/meshes/helheim.2\n"
+             "Elmer output dir: path to the Elmer output folder, e.g.\n"
+             "    /home/daniel/greenland_inversions/elmer/helheim3d\n"
+             "Output file name: path & filename to output the result\n")
+
+    # Parse command-line arguments
+    try:
+        opts, args = getopt.getopt(argv, "hm:e:o:")
+    except getopt.GetoptError:
+        print(helps)
+        sys.exit(1)
+
+    for opt, arg in opts:
+        if opt in ('-h', "--h", "--help"):
+            print(helps)
+            sys.exit(0)
+        elif opt in ("-m", "--m", "-M", "--M", "-mesh", "--mesh"):
+            mesh_file = arg
+        elif opt in ("-e", "--e", "-E", "--E", "-elmer", "--elmer"):
+            elmer_dir = arg
+        elif opt in ("-o", "--o", "-output", "--output"):
+            out_file = arg
+        else:
+            print(helps)
+            sys.exit(1)
+
+    # Load in the Triangle mesh for the glacier
+    xm, ym, ele, bnd = read_triangle_mesh(mesh_file)
     tri = Triangulation(xm, ym, ele)
 
-    # Now get the basal friction parameter and the horizontal velocities at
-    # the bed from Elmer's output
-    beta = get_field("beta", glacier, 4, tri, surface = "bottom")
-    u = get_field("velod 1", glacier, 4, tri, surface = "bottom")
-    v = get_field("velod 2", glacier, 4, tri, surface = "bottom")
+    # Get the basal friction parameter and the sliding velocities from Elmer
+    beta = get_field("beta", elmer_dir, 4, tri, surface = "bottom")
+    u = get_field("velod 1", elmer_dir, 4, tri, surface = "bottom")
+    v = get_field("velod 2", elmer_dir, 4, tri, surface = "bottom")
 
     # Interpolate the results to a regularly spaced grid
     xmin = 100.0 * math.floor(np.min(xm)/100.0)
@@ -96,6 +126,7 @@ if __name__ == "__main__":                                                     #
 
     tau = -9999.0 * np.ones((ny, nx))
 
+    # Note: this part needs matplotlib 1.4.2 to work correctly
     finder = tri.get_trifinder()
     interp_beta = LinearTriInterpolator(tri, beta, trifinder = finder)
     interp_uvel = LinearTriInterpolator(tri, u,    trifinder = finder)
@@ -111,5 +142,8 @@ if __name__ == "__main__":                                                     #
                 tau[i, j] = 1000 * Beta**2 * math.sqrt(U**2 + V**2)
 
     # Write the interpolated basal shear stress to the QGIS format
-    write_to_qgis(glacier + "_taub.txt", tau, x[0], y[0], 100.0, -9999)
+    write_to_qgis(out_file, tau, x[0], y[0], 100.0, -9999)
 
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
