@@ -3,6 +3,7 @@
 import sys
 sys.path.insert(0, "../scripts")
 import getopt
+from os.path import expanduser
 
 from scipy.spatial import cKDTree
 from matplotlib.tri import *        # Note: need matplotlib 1.4.2
@@ -59,7 +60,10 @@ def get_field(field, directory, partitions, mesh, surface = "bottom"):         #
     '''
     filename = "Test_Robin_Beta.result"
 
-    data = get_variable(field, directory, filename, partitions)
+    data = get_variable(field,
+                        expanduser(directory),
+                        expanduser(filename),
+                        partitions)
     x, y, q = get_layer(data, surface)
 
     permutation = reconcile_elmer_with_mesh(mesh.x, mesh.y, x, y)
@@ -104,7 +108,7 @@ def main(argv):                                                                #
             sys.exit(1)
 
     # Load in the Triangle mesh for the glacier
-    xm, ym, ele, bnd = read_triangle_mesh(mesh_file)
+    xm, ym, ele, bnd = read_triangle_mesh(expanduser(mesh_file))
     tri = Triangulation(xm, ym, ele)
 
     # Get the basal friction parameter and the sliding velocities from Elmer
