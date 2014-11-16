@@ -20,7 +20,7 @@ R = 8.3144
 A = A0 * math.exp(-Q / (R * T))
 
 
-def compute_basal_fields(x, y, s, b, u, v):
+def compute_basal_fields(x, y, s, b, u, v, frac = 0.9):
     '''
     Inputs:
     x : list of horizontal coordinates of the grid
@@ -29,6 +29,8 @@ def compute_basal_fields(x, y, s, b, u, v):
     b : array of ice bed elevations
     u : array of ice velocities in the x-direction
     v : array of ice velocities in the y-direction
+    frac : optional parameter; the fraction of the driving stress that the
+            basal shear stress is assumed to support
 
     Outputs:
     beta : basal sliding coefficient, under the shallow ice approximation
@@ -69,39 +71,39 @@ def compute_basal_fields(x, y, s, b, u, v):
                 ds[i, j] = mva
 
 
-    #------------------------------------
-    # Compute the bed sliding velocities
+    #---------------------------------------------------------
+    # Compute the bed sliding velocities & friction parameter
     ub = np.zeros((ny, nx))
     vb = np.zeros((ny, nx))
+    beta = np.zeros((ny, nx))
 
-    # First use SIA to get a rough estimate of the bed sliding velocity
+    q = 0.0
+    speed = 0.0
+
     for i in range(1, ny - 1):
         for j in range(1, nx - 1):
             if u[i, j] != -2.0e+9:
                 h = max(s[i, j] - b[i, j], 0.0)
-                ds2 = ds[i, j]**2
-                rgh3 = (rho * g * h)**3
-                ub[i, j] = u[i, j] + 0.5 * A * rgh3 * h * ds2 * dsdx[i, j]
-                vb[i, j] = v[i, j] + 0.5 * A * rgh3 * h * ds2 * dsdy[i, j]
+                q = frac**3 * A * (rho * g * h)**3 * ds[i, j]**3 / 2
+                speed = np.sqrt(u[i, j]**2 + v[i, j]**2)
+
+                # The basal sliding velocities are assumed to have the same
+                # direction as the surface velocities, only with lower speed
+                # according to a rough SIA-like approximation.
+                ub[i, j] = (speed - h*q) * u[i, j]/speed
+                vb[i, j] = (speed - h*q) * v[i, j]/speed
+
+                # Since we've already guessed the sliding speed and the
+                # x-z strain rate from the SIA, the boundary condition
+                #     tau_xz = -beta**2 * u    (resp. tau_yz, v)
+                # gives us the value of beta consistent with the guesses
+                # we've already made.
+                beta[i, j] = (2*q / (A*(speed - h*q)**3))**(1.0/6)
             else:
                 ub[i, j] = -2.0e+9
                 vb[i, j] = -2.0e+9
+                beta[i, j] = -2.0e+9
 
-    # The SIA guess could behave very pathologically in some places, so force
-    # the bed velocities to point in the same direction as the surface
-    # velocities and cut off the speeds at some minimum / maximum
-    for i in range(ny):
-        for j in range(nx):
-            if u[i, j] != -2.0e+9:
-                ss = np.sqrt(u[i, j]**2 + v[i, j]**2)
-                sb = np.sqrt(ub[i, j]**2 + vb[i, j]**2)
-
-                angle = 1.0
-                if ss > 0 and sb > 0:
-                    angle = (u[i, j]*ub[i, j] + v[i, j]*vb[i, j]) / (ss * sb)
-
-                ub[i, j] = u[i, j] * min(0.99, sb / ss) * max(angle, 0.05)
-                vb[i, j] = v[i, j] * min(0.99, sb / ss) * max(angle, 0.05)
 
     def fill_to_boundary(phi):
         phi[0, :] = phi[1, :]
@@ -109,33 +111,9 @@ def compute_basal_fields(x, y, s, b, u, v):
         phi[:, 0] = phi[:, 1]
         phi[:, -1] = phi[:, -2]
 
+    fill_to_boundary(beta)
     fill_to_boundary(ub)
     fill_to_boundary(vb)
-
-
-    #-------------------------------------
-    # Compute the basal sliding parameter
-
-    # Chooe some fraction of the driving stress for the basal shear stress
-    # to support
-    frac = 0.9
-
-    # beta = stress / speed
-    beta = np.zeros((ny, nx))
-    for i in range(ny):
-        for j in range(nx):
-            if u[i, j] != -2.0e+9:
-                h = max(s[i, j] - b[i, j], 0.0)
-                dp = min(ub[i, j] * dsdx[i, j] + vb[i, j] * dsdy[i, j], 0.0)
-                sb = np.sqrt(ub[i, j]**2 + vb[i, j]**2)
-                beta[i, j] = -frac * rho * g * h * dp / (sb**2 + 30.0)
-
-    beta = np.sqrt(beta)
-
-    for i in range(ny):
-        for j in range(nx):
-            if u[i, j] == -2.0e+9:
-                beta[i, j] = -2.0e+9
 
     return beta, ub, vb
 
