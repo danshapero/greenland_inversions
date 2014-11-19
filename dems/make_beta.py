@@ -83,22 +83,28 @@ def compute_basal_fields(x, y, s, b, u, v, frac = 0.9):
     for i in range(1, ny - 1):
         for j in range(1, nx - 1):
             if u[i, j] != -2.0e+9:
+                alpha = frac
                 h = max(s[i, j] - b[i, j], 0.0)
-                q = frac**3 * A * (rho * g * h)**3 * ds[i, j]**3 / 2
+                q = A * (rho * g * h)**3 * ds[i, j]**3 / 2
                 speed = np.sqrt(u[i, j]**2 + v[i, j]**2)
+
+                basal_speed = speed - alpha**3*h*q
+                if basal_speed <= 0.0:
+                    basal_speed = min(10.0, 0.1 * speed)
+                    alpha = ((speed - basal_speed) / (h*q))**(1.0/3)
 
                 # The basal sliding velocities are assumed to have the same
                 # direction as the surface velocities, only with lower speed
                 # according to a rough SIA-like approximation.
-                ub[i, j] = (speed - h*q) * u[i, j]/speed
-                vb[i, j] = (speed - h*q) * v[i, j]/speed
+                ub[i, j] = basal_speed/speed * u[i, j]
+                vb[i, j] = basal_speed/speed * v[i, j]
 
                 # Since we've already guessed the sliding speed and the
                 # x-z strain rate from the SIA, the boundary condition
                 #     tau_xz = -beta**2 * u    (resp. tau_yz, v)
                 # gives us the value of beta consistent with the guesses
                 # we've already made.
-                beta[i, j] = (2*q / (A*(speed - h*q)**3))**(1.0/6)
+                beta[i, j] = (2*alpha**3*q / (A*basal_speed**3))**(1.0/6)
             else:
                 ub[i, j] = -2.0e+9
                 vb[i, j] = -2.0e+9
