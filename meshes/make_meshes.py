@@ -1,59 +1,59 @@
 #!/usr/bin/env python
 
 import sys
-sys.path.insert(0,'../scripts/')
+sys.path.insert(0, '../scripts/')
 
 import os
 import numpy as np
 from meshes import *
 
-glaciers = ['helheim', 'kangerd','jakobshavn']
+glaciers = ["helheim", "kangerd", "jakobshavn"]
 
 for glacier in glaciers:
-    filename = glacier+'/'+glacier
+    filename = glacier + '/' + glacier
 
     # Generate a preliminary mesh
-    if not os.path.exists(filename+'.1.node'):
-        os.system('triangle -pqnea250000.0 '+filename+'.poly')
+    if not os.path.exists(filename + ".1.node"):
+        os.system("triangle -pqnea250000.0 " + filename + ".poly")
 
     # Make a .area file to inform the triangulation of a finer mesh
-    if not os.path.exists(filename+'.1.area'):
+    if not os.path.exists(filename + '.1.area'):
         # Read the velocities
-        fid = open('../dems/'+glacier+'/UDEM.xy')
+        fid = open("../dems/" + glacier + "/UDEM.xy")
         nx = int(fid.readline().split()[0])
         ny = int(fid.readline().split()[0])
 
-        vx = np.zeros((ny,nx))
+        vx = np.zeros((ny, nx))
         X = np.zeros(nx)
         Y = np.zeros(ny)
 
         for j in range(nx):
             for i in range(ny):
-                (X[j],Y[i],vx[i,j]) = map(float,fid.readline().split()[0:])
+                X[j], Y[i], vx[i,j] = map(float, fid.readline().split()[0:])
 
         fid.close()
 
-        fid = open('../dems/'+glacier+'/VDEM.xy')
+        fid = open("../dems/" + glacier + "/VDEM.xy")
         nx = int(fid.readline().split()[0])
         ny = int(fid.readline().split()[0])
 
-        vy = np.zeros((ny,nx))
+        vy = np.zeros((ny, nx))
         for j in range(nx):
             for i in range(ny):
-                (X[j],Y[i],vy[i,j]) = map(float,fid.readline().split()[0:])
+                X[j], Y[i], vy[i,j] = map(float, fid.readline().split()[0:])
         fid.close()
 
         # Compute the speed
-        V = np.zeros((ny,nx))
+        V = np.zeros((ny, nx))
         for i in range(ny):
             for j in range(nx):
-                if (vx[i,j]!=-2e+9):
-                    V[i,j] = np.sqrt(vx[i,j]**2+vy[i,j]**2)
+                if vx[i,j] != -2e+9:
+                    V[i,j] = np.sqrt(vx[i,j]**2 + vy[i,j]**2)
 
         del vx, vy
 
         # Load in the preliminary mesh
-        (x,y,ele,bnd) = read_triangle_mesh(filename+'.1')
+        x, y, ele, bnd = read_triangle_mesh(filename + ".1")
 
         ne = np.shape(ele)[0]
         nn = len(x)
@@ -61,9 +61,9 @@ for glacier in glaciers:
         # Find the ice speed at all the mesh points
         v = np.zeros(nn)
         for n in range(nn):
-            i = int( (y[n]-Y[0])/100.0 )
-            j = int( (x[n]-X[0])/100.0 )
-            v[n] = 0.25*(V[i,j]+V[i+1,j]+V[i,j+1]+V[i+1,j+1])
+            i = int( (y[n] - Y[0]) / 100.0 )
+            j = int( (x[n] - X[0]) / 100.0 )
+            v[n] = 0.25*(V[i,j] + V[i+1,j] + V[i,j+1] + V[i+1,j+1])
 
         del V, X, Y
 
@@ -78,15 +78,15 @@ for glacier in glaciers:
             else:
                 area[n] = 500000.0
 
-        fid = open(filename+'.1.area','w')
+        fid = open(filename + ".1.area", 'w')
         fid.write('{0}\n'.format(ne))
         for n in range(ne-1):
-            fid.write('{0} {1}\n'.format(n+1,area[n]))
-        fid.write('{0} {1}'.format(ne,area[ne-1]))
+            fid.write('{0} {1}\n'.format(n+1, area[n]))
+        fid.write('{0} {1}'.format(ne, area[ne-1]))
         fid.close()
 
     # Generate the refined mesh
-    if not os.path.exists(filename+'.2.node'):
-        os.system('triangle -rpqnea '+filename+'.1')
+    if not os.path.exists(filename + '.2.node'):
+        os.system('triangle -rpqnea ' + filename+'.1')
 
 

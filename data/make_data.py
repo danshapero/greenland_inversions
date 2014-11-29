@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import zipfile
 
 # -----------------------
 # Retrieve velocity data
@@ -44,18 +43,9 @@ for glacier in glacier_data.keys():
                 os.system('wget ' + url + ' -P ' + glacier)
 
 
-
-# -----------------------------
-# Retrieve data for Jakobshavn
-# -----------------------------
-
-url = "http://students.washington.edu/shapero/jakobshavn/"
-if not os.path.exists("jakobshavn/dem13Mar.smooth"):
-    os.system("wget " + url + "dem13Mar.smooth -P jakobshavn")
-    os.system("wget " + url + "dem13Mar.smooth.geodat -P jakobshavn")
-
-
+# -------------------------------------
 # Retrieve temperature / rheology data
+# -------------------------------------
 url = "http://students.washington.edu/shapero/"
 for glacier in ["helheim", "kangerd", "jakobshavn"]:
     filename = 'xyzTA' + glacier + '.txt'
@@ -63,3 +53,10 @@ for glacier in ["helheim", "kangerd", "jakobshavn"]:
         os.system('wget ' + url + glacier + '/' + filename + ' -P ' + glacier)
 
 
+# -------------------------------------------------------
+# Retrieve special surface elevation data for Jakobshavn
+# -------------------------------------------------------
+url = "http://students.washington.edu/shapero/jakobshavn/"
+if not os.path.exists("jakobshavn/dem13Mar.smooth"):
+    os.system("wget " + url + "dem13Mar.smooth -P jakobshavn")
+    os.system("wget " + url + "dem13Mar.smooth.geodat -P jakobshavn")
