@@ -4,6 +4,7 @@ import sys
 sys.path.insert(0,'../scripts')
 
 import os
+import getopt
 import math
 import numpy as np
 from read_dem import *
@@ -20,7 +21,7 @@ R = 8.3144
 A = A0 * math.exp(-Q / (R * T))
 
 
-def compute_basal_fields(x, y, s, b, u, v, frac = 0.9):
+def compute_basal_fields(x, y, s, b, u, v, frac):
     '''
     Inputs:
     x : list of horizontal coordinates of the grid
@@ -104,6 +105,8 @@ def compute_basal_fields(x, y, s, b, u, v, frac = 0.9):
                 #     tau_xz = -beta**2 * u    (resp. tau_yz, v)
                 # gives us the value of beta consistent with the guesses
                 # we've already made.
+                #TODO handle the case where alpha = 0.0. Should it just be
+                #TODO really really small?
                 beta[i, j] = (2*alpha**3*q / (A*basal_speed**3))**(1.0/6)
             else:
                 ub[i, j] = -2.0e+9
@@ -124,8 +127,35 @@ def compute_basal_fields(x, y, s, b, u, v, frac = 0.9):
     return beta, ub, vb
 
 
+# ---------------------------------------------------------------------------- #
+def main(argv):                                                                #
+# ---------------------------------------------------------------------------- #
+    # Parse command line arguments
+    frac = 0.5
+    helps = ("Script to make an initial guess for the basal sliding velocity\n"
+             "and basal friction parameter.\n\n"
+             "Usage: python make_beta.py -f <percentage>\n"
+             "percentage: how much of the driving stress the basal shear\n"
+             "    stress is assumed to support, e.g. 0.5, 0.75, 0.001, etc.\n")
 
-if __name__ == "__main__":
+    try:
+        opts, args = getopt.getopt(argv, "hf:")
+    except getopt.GetoptError:
+        print(helps)
+        sys.exit(1)
+
+    for opt, arg in opts:
+        if opt in ('-h', "--h", "--help"):
+            print(helps)
+            sys.exit(0)
+        elif opt in ("-f", "--f", "-fraction", "--fraction"):
+            frac = float(arg)
+        else:
+            print(helps)
+            sys.exit(1)
+
+
+    # Make the initial guess for basal parameters of each glacier
     glaciers = ["helheim", "kangerd", "jakobshavn"]
 
     for glacier in glaciers:
@@ -134,8 +164,8 @@ if __name__ == "__main__":
             and os.path.exists(glacier + "/VBDEM.xy"  )):
             #------------------------------------
             # Read in the ice surface velocities
-            (x, y, u) = read_dem(glacier + "/UDEM.xy")
-            (x, y, v) = read_dem(glacier + "/VDEM.xy")
+            x, y, u = read_dem(glacier + "/UDEM.xy")
+            x, y, v = read_dem(glacier + "/VDEM.xy")
 
             nx = len(x)
             ny = len(y)
@@ -143,8 +173,8 @@ if __name__ == "__main__":
 
             #--------------------------------------------
             # Read in the ice surface and bed elevations
-            (xs, ys, sd) = read_dem(glacier + "/zsDEM.xy")
-            (xb, yb, bd) = read_dem(glacier + "/zbDEM.xy")
+            xs, ys, sd = read_dem(glacier + "/zsDEM.xy")
+            xb, yb, bd = read_dem(glacier + "/zbDEM.xy")
             nxs = len(xs)
             nys = len(ys)
 
@@ -174,7 +204,7 @@ if __name__ == "__main__":
 
             #----------------------------------------------
             # Compute some bed sliding velocities from SIA
-            beta, ub, vb = compute_basal_fields(x, y, s, b, u, v)
+            beta, ub, vb = compute_basal_fields(x, y, s, b, u, v, frac)
 
             for i in range(ny):
                 for j in range(nx):
@@ -201,5 +231,9 @@ if __name__ == "__main__":
             fidub.close()
             fidvb.close()
 
-
             print("Done computing basal fields for " + glacier)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
+
