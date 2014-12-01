@@ -60,3 +60,4 @@ url = "http://students.washington.edu/shapero/jakobshavn/"
 if not os.path.exists("jakobshavn/dem13Mar.smooth"):
     os.system("wget " + url + "dem13Mar.smooth -P jakobshavn")
     os.system("wget " + url + "dem13Mar.smooth.geodat -P jakobshavn")
+

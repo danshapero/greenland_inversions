@@ -44,6 +44,7 @@ def main(argv):                                                                #
     if not dem_source in ("morlighem", "cresis"):
         print("Unrecognized DEM source " + dem_source + ", should be\n"
               "either \"cresis\" or \"morlighem\"\n")
+        sys.exit(1)
 
     # Make velocity data files
     for glacier in velocity_data.keys():
@@ -108,20 +109,25 @@ def main(argv):                                                                #
     # Make surface / bed elevation data
     # ----------------------------------
 
-    url = "http://students.washington.edu/shapero/dems_" + dem_source + "/"
+    url = "http://students.washington.edu/shapero/"
 
     # Retrieve bed DEMs from my website
+    bed_dem_url = url + "bed_dems/" + dem_source + "/"
     for glacier in ["helheim", "kangerd", "jakobshavn"]:
         # Check whether or not the be DEM has already been made
         if not os.path.exists(glacier + "/zbDEM.xy"):
-            os.system("wget " + url + glacier + "/zbDEM.xy -P " + glacier)
+            os.system("wget " + bed_dem_url
+                        + glacier + "/zbDEM.xy -P " + glacier)
 
         print ("Done making bed elevation data for " + glacier)
 
+
     # Retrieve GIMP surface DEMs for Helheim & Kangerd from my website
+    surface_dem_url = url + "surface_dems/"
     for glacier in ["helheim", "kangerd"]:
         if not os.path.exists(glacier + "/zsDEM.xy"):
-            os.system("wget " + url + glacier + "/zsDEM.xy -P " + glacier)
+            os.system("wget " + surface_dem_url
+                         + glacier + "/zsDEM.xy -P " + glacier)
 
         print ("Done making surface elevation for " + glacier)
 
