@@ -48,9 +48,9 @@ for glacier in glacier_data.keys():
 # -------------------------------------
 url = "http://students.washington.edu/shapero/"
 for glacier in ["helheim", "kangerd", "jakobshavn"]:
-    filename = 'xyzTA' + glacier + '.txt'
+    filename = "xyzTA" + glacier + ".txt"
     if not os.path.exists(glacier + '/' + filename):
-        os.system('wget ' + url + glacier + '/' + filename + ' -P ' + glacier)
+        os.system("wget " + url + "temp_data/" + filename + ' -P ' + glacier)
 
 
 # -------------------------------------------------------
