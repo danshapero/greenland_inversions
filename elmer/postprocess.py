@@ -84,7 +84,9 @@ def main(argv):                                                                #
              "    /home/daniel/greenland_inversions/meshes/helheim.2\n"
              "Elmer output dir: path to the Elmer output folder, e.g.\n"
              "    /home/daniel/greenland_inversions/elmer/helheim3d\n"
-             "Output file name: path & filename to output the result\n")
+             "Output file name: path & stem of filename to output the result\n"
+             "    result, e.g. ~/\"helheim\"; will generated files\n"
+             "    helheim_us.txt, helheim_ub.txt, helheim_taub.txt.\n")
 
     # Parse command-line arguments
     try:
@@ -111,10 +113,16 @@ def main(argv):                                                                #
     xm, ym, ele, bnd = read_triangle_mesh(expanduser(mesh_file))
     tri = Triangulation(xm, ym, ele)
 
-    # Get the basal friction parameter and the sliding velocities from Elmer
+    # Get the basal friction parameter from Elmer
     beta = get_field("beta", elmer_dir, 4, tri, surface = "bottom")
-    u = get_field("velod 1", elmer_dir, 4, tri, surface = "bottom")
-    v = get_field("velod 2", elmer_dir, 4, tri, surface = "bottom")
+
+    # Get the computed basal velocities
+    uxb = get_field("velod 1", elmer_dir, 4, tri, surface = "bottom")
+    uyb = get_field("velod 2", elmer_dir, 4, tri, surface = "bottom")
+
+    # Get the computed surface velocities
+    uxs = get_field("velod 1", elmer_dir, 4, tri, surface = "top")
+    uys = get_field("velod 2", elmer_dir, 4, tri, surface = "top")
 
     # Interpolate the results to a regularly spaced grid
     xmin = 100.0 * math.floor(np.min(xm)/100.0)
@@ -129,24 +137,34 @@ def main(argv):                                                                #
     ny = len(y)
 
     tau = -9999.0 * np.ones((ny, nx))
+    us  = -9999.0 * np.ones((ny, nx))
+    ub  = -9999.0 * np.ones((ny, nx))
 
     # Note: this part needs matplotlib 1.4.2 to work correctly
     finder = tri.get_trifinder()
     interp_beta = LinearTriInterpolator(tri, beta, trifinder = finder)
-    interp_uvel = LinearTriInterpolator(tri, u,    trifinder = finder)
-    interp_vvel = LinearTriInterpolator(tri, v,    trifinder = finder)
+    interp_uxb = LinearTriInterpolator(tri, uxb,   trifinder = finder)
+    interp_uyb = LinearTriInterpolator(tri, uyb,   trifinder = finder)
+    interp_uxs = LinearTriInterpolator(tri, uxs,   trifinder = finder)
+    interp_uys = LinearTriInterpolator(tri, uys,   trifinder = finder)
 
     for i in range(ny):
         for j in range(nx):
             k = int(finder(x[j], y[i]))
             if k != -1:
                 Beta = interp_beta(x[j], y[i])
-                U    = interp_uvel(x[j], y[i])
-                V    = interp_vvel(x[j], y[i])
-                tau[i, j] = 1000 * Beta**2 * math.sqrt(U**2 + V**2)
+                Uxb  = interp_uxb(x[j], y[i])
+                Uyb  = interp_uyb(x[j], y[i])
+                Uxs  = interp_uxs(x[j], y[i])
+                Uys  = interp_uys(x[j], y[i])
+                ub[i, j] = math.sqrt(Uxb**2 + Uyb**2)
+                us[i, j] = math.sqrt(Uxs**2 + Uys**2)
+                tau[i, j] = 1000 * Beta**2 * ub[i, j]
 
     # Write the interpolated basal shear stress to the QGIS format
-    write_to_qgis(out_file, tau, x[0], y[0], 100.0, -9999)
+    write_to_qgis(out_file + "_taub.txt", tau, x[0], y[0], 100.0, -9999)
+    write_to_qgis(out_file + "_us.txt",   us,  x[0], y[0], 100.0, -9999)
+    write_to_qgis(out_file + "_ub.txt",   ub,  x[0], y[0], 100.0, -9999)
 
 
 if __name__ == "__main__":
