@@ -20,8 +20,9 @@ T = 273 - 13
 R = 8.3144
 A = A0 * math.exp(-Q / (R * T))
 
-
-def compute_basal_fields(x, y, s, b, u, v, frac):
+# ---------------------------------------------------------------------------- #
+def compute_basal_fields(x, y, s, b, u, v, frac):                              #
+# ---------------------------------------------------------------------------- #
     '''
     Inputs:
     x : list of horizontal coordinates of the grid
