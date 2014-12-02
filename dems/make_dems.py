@@ -8,6 +8,8 @@ import os
 from geodat import *
 from geotif import *
 
+import postprocess_jak
+
 velocity_data = {
     'helheim': 'TSX_E66.50N_27Jan09_07Feb09',
     'kangerd': 'TSX_E68.80N_28Jan09_08Feb09',
@@ -148,6 +150,12 @@ def main(argv):                                                                #
         fid.close()
 
     print ("Done making surface elevation for Jakobshavn")
+
+    # Post-process the Jakobshavn velocities to interpolate over some small
+    # gaps in the observational data
+    postprocess_jak.main()
+
+    print("Done post-processing Jakobshavn velocity data")
 
 
 if __name__ == "__main__":

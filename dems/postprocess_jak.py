@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 import sys
 sys.path.insert(0, '../scripts')
@@ -69,9 +68,9 @@ def fill_internal_missing_data(q, x, y):
             print("{0} {1}\n", i, j)
 
 
-if __name__ == "__main__":
-    (x, y, vx) = read_dem('jakobshavn/UDEM.xy')
-    (x, y, vy) = read_dem('jakobshavn/VDEM.xy')
+def main():
+    x, y, vx = read_dem("jakobshavn/UDEM.xy")
+    x, y, vy = read_dem("jakobshavn/VDEM.xy")
 
     nx = len(x)
     ny = len(y)
@@ -86,8 +85,8 @@ if __name__ == "__main__":
     fill_internal_missing_data(q, x, y)
     vy = np.maximum(q, vy)
 
-    fidu = open('jakobshavn/UDEM0.xy', 'w')
-    fidv = open('jakobshavn/VDEM0.xy', 'w')
+    fidu = open("jakobshavn/UDEM0.xy", 'w')
+    fidv = open("jakobshavn/VDEM0.xy", 'w')
 
     for fid in (fidu, fidv):
         fid.write("{0}\n{1}\n".format(nx, ny))
