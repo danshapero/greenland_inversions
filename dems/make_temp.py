@@ -10,7 +10,9 @@ sys.path.insert(0, '../scripts')
 from read_dem import *
 
 
-def read_kristin_data(filename):
+# ---------------------------------------------------------------------------- #
+def read_kristin_data(filename):                                               #
+# ---------------------------------------------------------------------------- #
     """
     Read in Kristin's temperature/viscosity data.
 
@@ -89,7 +91,9 @@ def read_kristin_data(filename):
 
 
 
-def low_pass_filter(q, iters):
+# ---------------------------------------------------------------------------- #
+def low_pass_filter(q, iters):                                                 #
+# ---------------------------------------------------------------------------- #
     ny, nx = np.shape(q)
 
     def lpf(q):
@@ -105,7 +109,10 @@ def low_pass_filter(q, iters):
 
 glaciers = ["helheim", "kangerd", "jakobshavn"]
 
-if __name__ == "__main__":
+
+# ---------------------------------------------------------------------------- #
+def main(argv):                                                                #
+# ---------------------------------------------------------------------------- #
     for glacier in glaciers:
         outfile = glacier + "/TDEM.xy"
         if not os.path.exists(outfile):
@@ -198,4 +205,10 @@ if __name__ == "__main__":
 
             print("Done computing flow law parameter for " + glacier)
 
+
+
+# ---------------------------------------------------------------------------- #
+if __name__ == "__main__":                                                     #
+# ---------------------------------------------------------------------------- #
+    main(argv[1:])
 
