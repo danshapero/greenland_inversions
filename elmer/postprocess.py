@@ -2,7 +2,7 @@
 
 import sys
 sys.path.insert(0, "../scripts")
-import getopt
+import argparse
 from os.path import expanduser
 
 from scipy.spatial import cKDTree
@@ -89,25 +89,19 @@ def main(argv):                                                                #
              "    helheim_us.txt, helheim_ub.txt, helheim_taub.txt.\n")
 
     # Parse command-line arguments
-    try:
-        opts, args = getopt.getopt(argv, "hm:e:o:")
-    except getopt.GetoptError:
-        print(helps)
-        sys.exit(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-e", "--elmer", required = True,
+                        help = "Directory of Elmer result files")
+    parser.add_argument("-m", "--mesh", required = True,
+                        help = "Path to triangle mesh and file stem")
+    parser.add_argument("-o", "--output", required = True,
+                        help = "Output directory and file stem")
 
-    for opt, arg in opts:
-        if opt in ('-h', "--h", "--help"):
-            print(helps)
-            sys.exit(0)
-        elif opt in ("-m", "--m", "-M", "--M", "-mesh", "--mesh"):
-            mesh_file = arg
-        elif opt in ("-e", "--e", "-E", "--E", "-elmer", "--elmer"):
-            elmer_dir = arg
-        elif opt in ("-o", "--o", "-output", "--output"):
-            out_file = arg
-        else:
-            print(helps)
-            sys.exit(1)
+    args, _ = parser.parse_known_args(argv)
+
+    mesh_file = args.mesh
+    elmer_dir = args.elmer
+    out_file  = args.output
 
     # Load in the Triangle mesh for the glacier
     xm, ym, ele, bnd = read_triangle_mesh(expanduser(mesh_file))

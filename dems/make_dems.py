@@ -2,7 +2,7 @@
 
 import sys
 sys.path.insert(0,'../scripts')
-import getopt
+import argparse
 
 import os
 from geodat import *
@@ -22,26 +22,12 @@ def main(argv):                                                                #
 # ---------------------------------------------------------------------------- #
     # Parse command line arguments
     dem_source = "morlighem"
-    helps = ("Script to make gridded velocity and elevation data files\n"
-             "from raw data.\n\n"
-             "Usage: python make_dems.py -d <dem source>\n"
-             "dem source: either \"morlighem\" or \"cresis\"\n")
 
-    try:
-        opts, args = getopt.getopt(argv, "hd:")
-    except getopt.GetoptError:
-        print(helps)
-        sys.exit(1)
-
-    for opt, arg in opts:
-        if opt in ('-h', "--h", "--help"):
-            print(helps)
-            sys.exit(0)
-        elif opt in ("-d", "-dem", "--dem", "-dems", "--dems"):
-            dem_source = arg
-        else:
-            print(helps)
-            sys.exit(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--dem", required = True,
+                        help = "DEM source, either 'cresis' or 'morlighem'")
+    args, _ = parser.parse_known_args(argv)
+    dem_source = args.dem
 
     if not dem_source in ("morlighem", "cresis"):
         print("Unrecognized DEM source " + dem_source + ", should be\n"

@@ -4,7 +4,7 @@ import sys
 sys.path.insert(0,'../scripts')
 
 import os
-import getopt
+import argparse
 import math
 import numpy as np
 from read_dem import *
@@ -23,7 +23,7 @@ A = A0 * math.exp(-Q / (R * T))
 # ---------------------------------------------------------------------------- #
 def compute_basal_fields(x, y, s, b, u, v, frac):                              #
 # ---------------------------------------------------------------------------- #
-    '''
+    """
     Inputs:
     x : list of horizontal coordinates of the grid
     y : list of vertical coordinates of the grid
@@ -38,7 +38,7 @@ def compute_basal_fields(x, y, s, b, u, v, frac):                              #
     beta : basal sliding coefficient, under the shallow ice approximation
     ub   : basal sliding velocity in the x-direction
     vb   : basal sliding velocity in the y-direction
-    '''
+    """
     nx = len(x)
     ny = len(y)
     dx = x[1] - x[0]
@@ -133,28 +133,12 @@ def main(argv):                                                                #
 # ---------------------------------------------------------------------------- #
     # Parse command line arguments
     frac = 0.5
-    helps = ("Script to make an initial guess for the basal sliding velocity\n"
-             "and basal friction parameter.\n\n"
-             "Usage: python make_beta.py -f <percentage>\n"
-             "percentage: how much of the driving stress the basal shear\n"
-             "    stress is assumed to support, e.g. 0.5, 0.75, 0.001, etc.\n")
 
-    try:
-        opts, args = getopt.getopt(argv, "hf:")
-    except getopt.GetoptError:
-        print(helps)
-        sys.exit(1)
-
-    for opt, arg in opts:
-        if opt in ('-h', "--h", "--help"):
-            print(helps)
-            sys.exit(0)
-        elif opt in ("-f", "--f", "-fraction", "--fraction"):
-            frac = float(arg)
-        else:
-            print(helps)
-            sys.exit(1)
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", "--frac", required = True,
+                        help = "% of driving stress to guess basal shear")
+    args, _ = parser.parse_known_args(argv)
+    frac = float(args.frac)
 
     # Make the initial guess for basal parameters of each glacier
     glaciers = ["helheim", "kangerd", "jakobshavn"]
