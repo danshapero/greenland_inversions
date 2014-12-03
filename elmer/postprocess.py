@@ -77,17 +77,6 @@ def main(argv):                                                                #
     elmer_dir = ''
     out_file  = ''
 
-    helps = ("Script to postprocess Elmer output into QGIS format.\n\n"
-             "Usage: python postprocess.py -m <mesh file stem>"
-                    " -e <Elmer output dir> -o <output file name>\n"
-             "mesh file stem: path to Triangle mesh and file stem, e.g.\n"
-             "    /home/daniel/greenland_inversions/meshes/helheim.2\n"
-             "Elmer output dir: path to the Elmer output folder, e.g.\n"
-             "    /home/daniel/greenland_inversions/elmer/helheim3d\n"
-             "Output file name: path & stem of filename to output the result\n"
-             "    result, e.g. ~/\"helheim\"; will generated files\n"
-             "    helheim_us.txt, helheim_ub.txt, helheim_taub.txt.\n")
-
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--elmer", required = True,

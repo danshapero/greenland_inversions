@@ -51,6 +51,8 @@ def get_variable(variable, directory, filename, partitions, verbose = False):  #
     file_lengths = [bufcount(parts_directory + "part." + str(p) + ".nodes")
                         for p in range(1, partitions + 1)]
 
+    print(file_lengths)
+
     nn = sum(file_lengths)
 
     if verbose:
@@ -102,7 +104,10 @@ def get_variable(variable, directory, filename, partitions, verbose = False):  #
 
         data_file.seek(0)
         data_file.seek(dstart[0, p])
-        data_file.readline()
+        line = data_file.readline()
+        if line[6:] != "use previous\n":
+            for i in range(file_lengths[p]):
+                data_file.readline()
 
         for i in range(file_lengths[p]):
             data['val'][start + i] = float(data_file.readline())
