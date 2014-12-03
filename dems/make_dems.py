@@ -110,8 +110,8 @@ def main(argv):                                                                #
         print ("Done making bed elevation data for " + glacier)
 
 
-    # Retrieve GIMP surface DEMs for Helheim & Kangerd from my website
-    surface_dem_url = url + "surface_dems/"
+    # Retrieve surface DEMs for Helheim & Kangerd from my website
+    surface_dem_url = url + "surface_dems/" + dem_source + "/"
     for glacier in ["helheim", "kangerd"]:
         if not os.path.exists(glacier + "/zsDEM.xy"):
             os.system("wget " + surface_dem_url
@@ -120,20 +120,25 @@ def main(argv):                                                                #
         print ("Done making surface elevation for " + glacier)
 
 
-    # Make DEMs for Jakobshavn from special data
     if not os.path.exists("jakobshavn/zsDEM.xy"):
-        # read the raw data
-        x, y, s = read_geodat("../data/jakobshavn/dem13Mar.smooth")
-        nx = len(x)
-        ny = len(y)
+        # Make DEMs for Jakobshavn from special data
+        if dem_source == "morlighem":
+            # read the raw data
+            x, y, s = read_geodat("../data/jakobshavn/dem13Mar.smooth")
+            nx = len(x)
+            ny = len(y)
 
-        # write out the surface data in the format Elmer expects
-        fid = open("jakobshavn/zsDEM.xy", "w")
-        fid.write("{0}\n{1}\n".format(nx, ny))
-        for j in range(nx):
-            for i in range(ny):
-                fid.write('{0} {1} {2}\n'.format(x[j], y[i], s[i, j]))
-        fid.close()
+            # write out the surface data in the format Elmer expects
+            fid = open("jakobshavn/zsDEM.xy", "w")
+            fid.write("{0}\n{1}\n".format(nx, ny))
+            for j in range(nx):
+                for i in range(ny):
+                    fid.write('{0} {1} {2}\n'.format(x[j], y[i], s[i, j]))
+            fid.close()
+        else:
+            os.system("wget " + surface_dem_url
+                        + "jakobshavn/zsDEM.xy -P jakobshavn")
+       
 
     print ("Done making surface elevation for Jakobshavn")
 
