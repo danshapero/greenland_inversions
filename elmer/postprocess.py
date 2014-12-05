@@ -100,12 +100,12 @@ def main(argv):                                                                #
     beta = get_field("beta", elmer_dir, 4, tri, surface = "bottom")
 
     # Get the computed basal velocities
-    uxb = get_field("velod 1", elmer_dir, 4, tri, surface = "bottom")
-    uyb = get_field("velod 2", elmer_dir, 4, tri, surface = "bottom")
+    uxb = get_field("velocity 1", elmer_dir, 4, tri, surface = "bottom")
+    uyb = get_field("velocity 2", elmer_dir, 4, tri, surface = "bottom")
 
     # Get the computed surface velocities
-    uxs = get_field("velod 1", elmer_dir, 4, tri, surface = "top")
-    uys = get_field("velod 2", elmer_dir, 4, tri, surface = "top")
+    uxs = get_field("velocity 1", elmer_dir, 4, tri, surface = "top")
+    uys = get_field("velocity 2", elmer_dir, 4, tri, surface = "top")
 
     # Interpolate the results to a regularly spaced grid
     xmin = 100.0 * math.floor(np.min(xm)/100.0)
