@@ -38,12 +38,12 @@ def reconcile_elmer_with_mesh(xt, yt, xe, ye):                                 #
     return p
 
 
-# ---------------------------------------------------------------------------- #
-def get_field(field, directory, partitions, mesh, surface = "bottom"):         #
-# ---------------------------------------------------------------------------- #
+# ------------------------------------------------------------------------ #
+def get_field(field, directory, partitions, mesh, surface = "bottom"):     #
+# ------------------------------------------------------------------------ #
     '''
-    Get the values of a field from Elmer's output on either the top or bottom
-    surface.
+    Get the values of a field from Elmer's output on either the top or
+    bottom surface.
 
     Paramters:
     =========
@@ -70,9 +70,9 @@ def get_field(field, directory, partitions, mesh, surface = "bottom"):         #
     return q[permutation]
 
 
-# ---------------------------------------------------------------------------- #
-def main(argv):                                                                #
-# ---------------------------------------------------------------------------- #
+# ------------------------------------------------------------------------ #
+def main(argv):                                                            #
+# ------------------------------------------------------------------------ #
     mesh_file = ''
     elmer_dir = ''
     out_file  = ''
@@ -107,6 +107,10 @@ def main(argv):                                                                #
     uxs = get_field("velocity 1", elmer_dir, 4, tri, surface = "top")
     uys = get_field("velocity 2", elmer_dir, 4, tri, surface = "top")
 
+    # Get the observed surface velocities
+    uxso = get_field("velod 1", elmer_dir, 4, tri, surface = "top")
+    uyso = get_field("velod 2", elmer_dir, 4, tri, surface = "top")
+
     # Interpolate the results to a regularly spaced grid
     xmin = 100.0 * math.floor(np.min(xm)/100.0)
     xmax = 100.0 * math.ceil(np.max(xm)/100.0)
@@ -122,6 +126,7 @@ def main(argv):                                                                #
     tau = -9999.0 * np.ones((ny, nx))
     us  = -9999.0 * np.ones((ny, nx))
     ub  = -9999.0 * np.ones((ny, nx))
+    uso = -9999.0 * np.ones((ny, nx))
 
     # Note: this part needs matplotlib 1.4.2 to work correctly
     finder = tri.get_trifinder()
@@ -130,6 +135,8 @@ def main(argv):                                                                #
     interp_uyb = LinearTriInterpolator(tri, uyb,   trifinder = finder)
     interp_uxs = LinearTriInterpolator(tri, uxs,   trifinder = finder)
     interp_uys = LinearTriInterpolator(tri, uys,   trifinder = finder)
+    interp_uxso = LinearTriInterpolator(tri, uxso, trifinder = finder)
+    interp_uyso = LinearTriInterpolator(tri, uyso, trifinder = finder)
 
     for i in range(ny):
         for j in range(nx):
@@ -140,14 +147,19 @@ def main(argv):                                                                #
                 Uyb  = interp_uyb(x[j], y[i])
                 Uxs  = interp_uxs(x[j], y[i])
                 Uys  = interp_uys(x[j], y[i])
+                Uxso = interp_uxso(x[j], y[i])
+                Uyso = interp_uyso(x[j], y[i])
+
                 ub[i, j] = math.sqrt(Uxb**2 + Uyb**2)
                 us[i, j] = math.sqrt(Uxs**2 + Uys**2)
+                uso[i, j] = math.sqrt(Uxso**2 + Uyso**2)
                 tau[i, j] = 1000 * Beta**2 * ub[i, j]
 
     # Write the interpolated basal shear stress to the QGIS format
     write_to_qgis(out_file + "_taub.txt", tau, x[0], y[0], 100.0, -9999)
     write_to_qgis(out_file + "_us.txt",   us,  x[0], y[0], 100.0, -9999)
     write_to_qgis(out_file + "_ub.txt",   ub,  x[0], y[0], 100.0, -9999)
+    write_to_qgis(out_file + "_uso.txt",  uso, x[0], y[0], 100.0, -9999)
 
 
 if __name__ == "__main__":
