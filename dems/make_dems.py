@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
 import sys
-sys.path.insert(0,'../scripts')
 import argparse
 
 import os
-from geodat import *
-from geotif import *
+from scripts.geodat import *
+from scripts.geotif import *
 
 import postprocess_jak
 

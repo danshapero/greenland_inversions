@@ -3,12 +3,10 @@
 import sys
 import os
 
-import make_data
-import make_dems
-import make_beta
-import make_temp
-import make_meshes
-import make_elmer_meshes
+from data import make_data
+from dems import make_dems, make_beta, make_temp
+from meshes import make_meshes
+from elmer import make_elmer_meshes
 
 
 # ---------------------------------------------------------------------------- #

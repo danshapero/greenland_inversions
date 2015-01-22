@@ -5,9 +5,8 @@ from scipy.spatial import cKDTree
 
 import os
 import sys
-sys.path.insert(0, '../scripts')
 
-from read_dem import *
+from scripts.read_dem import *
 
 
 # ---------------------------------------------------------------------------- #

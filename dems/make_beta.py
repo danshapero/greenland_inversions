@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
 import sys
-sys.path.insert(0,'../scripts')
 
 import os
 import argparse
 import math
 import numpy as np
-from read_dem import *
+from scripts.read_dem import *
 from scipy import interpolate
 
 

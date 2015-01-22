@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 
 import sys
-sys.path.insert(0, "../scripts")
 import argparse
 from os.path import expanduser
 
 from scipy.spatial import cKDTree
 from matplotlib.tri import *        # Note: need matplotlib 1.4.2
 
-from elmer import *
-from meshes import *
-from write_qgis import *
+from scripts.elmer import *
+from scripts.meshes import *
+from scripts.write_qgis import *
 
 
 # ---------------------------------------------------------------------------- #

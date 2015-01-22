@@ -5,7 +5,7 @@ sys.path.insert(0, "../scripts/")
 
 import os
 import numpy as np
-from meshes import *
+from scripts.meshes import *
 
 
 # ---------------------------------------------------------------------------- #

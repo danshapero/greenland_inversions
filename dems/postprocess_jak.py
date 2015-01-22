@@ -1,9 +1,8 @@
 
 import sys
-sys.path.insert(0, '../scripts')
 
 import os
-from read_dem import *
+from scripts.read_dem import *
 
 
 def relabel_external_missing_data(q, i, j):
