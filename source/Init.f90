@@ -517,6 +517,12 @@
 
         U = A0 * exp(-Q / (R*U))
 
+        ! Include softening of ice from before the last glacial maximum,
+        ! when the dustiness made it much softer; generally, this is any
+        ! ice within 300m of the bed.
+        alpha = 2 + tanh( (300 - (z - zb)) / 10 )
+        U = alpha * U
+
         ! The viscosity coefficient is the fluidity parameter `A` to the
         ! -1/3 power in units of Pa * s^(1/3)
         U = U**(-1.0/3.0)
