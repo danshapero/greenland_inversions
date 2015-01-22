@@ -2,11 +2,11 @@
 
 import sys
 import argparse
-
 import os
+import netCDF4
+
 from scripts.geodat import *
 from scripts.geotif import *
-
 import postprocess_jak
 
 velocity_data = {
@@ -33,7 +33,10 @@ def main(argv):                                                                #
               "either \"cresis\" or \"morlighem\"\n")
         sys.exit(1)
 
+
+    # -------------------------
     # Make velocity data files
+    # -------------------------
     for glacier in velocity_data.keys():
         if not os.path.exists(glacier):
             os.makedirs(glacier)
@@ -96,28 +99,31 @@ def main(argv):                                                                #
     # Make surface / bed elevation data
     # ----------------------------------
 
-    url = "http://students.washington.edu/shapero/"
+    if dem_source == "morlighem":
+        fid = netCDF4.Dataset("../data/MCdataset-2014-11-19.nc", "r")
+        x = fid.variables['x'][:]
+        y = fid.variables['y'][:]
 
-    # Retrieve bed DEMs from my website
-    bed_dem_url = url + "bed_dems/" + dem_source + "/"
-    for glacier in ["helheim", "kangerd", "jakobshavn"]:
-        # Check whether or not the be DEM has already been made
-        if not os.path.exists(glacier + "/zbDEM.xy"):
-            os.system("wget " + bed_dem_url
-                        + glacier + "/zbDEM.xy -P " + glacier)
+        dx = x[1] - x[0]
+        dy = y[1] - y[0]
 
-        print ("Done making bed elevation data for " + glacier)
+        rects = {"helheim": ((249775.0, 310825.0),
+                             (-2592825.0, -2513625.0)),
+                 "kangerd": ((448375.0, 495025.0),
+                             (-2300325.0, -2251725.0)),
+                 "jakobshavn": ((-209985.0, -135015.0),
+                                (-2314985.0, -2245025.0))}
 
+        for glacier, r in rects.iteritems():
+            imin = int( (r[0][0] - x[0]) / dx) )
+            imax = int( (r[0][1] - x[0]) / dx) )
+            jmin = int( (r[1][0] - y[0]) / dy) )
+            jmax = int( (r[1][1] - y[0]) / dy) )
 
-    # Retrieve surface DEMs for Helheim & Kangerd from my website
-    surface_dem_url = url + "surface_dems/" + dem_source + "/"
-    for glacier in ["helheim", "kangerd"]:
-        if not os.path.exists(glacier + "/zsDEM.xy"):
-            os.system("wget " + surface_dem_url
-                         + glacier + "/zsDEM.xy -P " + glacier)
-
-        print ("Done making surface elevation for " + glacier)
-
+            # TODO finish this
+    else:
+        # TODO: unzip the files from CReSIS and convert their contents from
+        # the QGIS format to the one Elmer expects
 
     if not os.path.exists("jakobshavn/zsDEM.xy"):
         # Make DEMs for Jakobshavn from special data

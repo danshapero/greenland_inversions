@@ -1,11 +1,44 @@
 #!/usr/bin/env python
 
 import sys
+import argparse
 import os
 
 # ---------------------------------------------------------------------------- #
 def main(argv):                                                                #
 # ---------------------------------------------------------------------------- #
+    dem_source = "morlighem"
+
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--dem", required = True,
+                        help = "DEM source, either 'cresis' or 'morlighem'")
+    args, _ = parser.parse_known_args(argv)
+    dem_source = args.dem
+
+    if not dem_source in ("morlighem", "cresis"):
+        print("Unrecognized DEM source " + dem_source + ", should be\n"
+              "either \"cresis\" or \"morlighem\"\n")
+        sys.exit(1)
+
+
+    # ------------------------
+    # Retrieve elevation data
+    # ------------------------
+    if dem_source == "morlighem":
+        os.system("wget ftp://sidads.colorado.edu/DATASETS/"
+                  "IDBMG4_BedMachineGr/MCdataset-2014-11-19.nc")
+    else:
+        os.system("wget ftp://data.cresis.ku.edu/data/temp/"
+                  "for_OIBlandice/Helheim_2006_2013_Composite.zip "
+                  "-P helheim")
+        os.system("wget ftp://data.cresis.ku.edu/data/temp/"
+                  "for_OIBlandice/Kangerdlugssuaq_2006_2013_Composite.zip "
+                  "-P kangerd")
+        os.system("wget ftp://data.cresis.ku.edu/data/grids/old_versions/"
+                  "Jakobshavn_2006_2012_Composite.zip "
+                  "-P jakobshavn")
+
 
     # -----------------------
     # Retrieve velocity data
@@ -45,6 +78,7 @@ def main(argv):                                                                #
                     url = glacier_data[glacier][filestem] + filename
                     os.system('wget ' + url + ' -P ' + glacier)
 
+
     # -------------------------------------
     # Retrieve temperature / rheology data
     # -------------------------------------
@@ -55,6 +89,7 @@ def main(argv):                                                                #
             os.system("wget " + url + "temp_data/"
                         + filename + ' -P ' + glacier)
 
+
     # -------------------------------------------------------
     # Retrieve special surface elevation data for Jakobshavn
     # -------------------------------------------------------
@@ -62,6 +97,7 @@ def main(argv):                                                                #
     if not os.path.exists("jakobshavn/dem13Mar.smooth"):
         os.system("wget " + url + "dem13Mar.smooth -P jakobshavn")
         os.system("wget " + url + "dem13Mar.smooth.geodat -P jakobshavn")
+
 
 
 # ---------------------------------------------------------------------------- #
