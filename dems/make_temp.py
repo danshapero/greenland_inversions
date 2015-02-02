@@ -9,9 +9,9 @@ import sys
 from scripts.read_dem import *
 
 
-# ---------------------------------------------------------------------------- #
-def read_kristin_data(filename):                                               #
-# ---------------------------------------------------------------------------- #
+# ------------------------------------------------------------------------ #
+def read_kristin_data(filename):                                           #
+# ------------------------------------------------------------------------ #
     """
     Read in Kristin's temperature/viscosity data.
 
@@ -90,9 +90,9 @@ def read_kristin_data(filename):                                               #
 
 
 
-# ---------------------------------------------------------------------------- #
-def low_pass_filter(q, iters):                                                 #
-# ---------------------------------------------------------------------------- #
+# ------------------------------------------------------------------------ #
+def low_pass_filter(q, iters):                                             #
+# ------------------------------------------------------------------------ #
     ny, nx = np.shape(q)
 
     def lpf(q):
@@ -109,11 +109,11 @@ def low_pass_filter(q, iters):                                                 #
 glaciers = ["helheim", "kangerd", "jakobshavn"]
 
 
-# ---------------------------------------------------------------------------- #
-def main(argv):                                                                #
-# ---------------------------------------------------------------------------- #
+# ------------------------------------------------------------------------ #
+def main(argv):                                                            #
+# ------------------------------------------------------------------------ #
     for glacier in glaciers:
-        outfile = glacier + "/TDEM.xy"
+        outfile = glacier + "/ADEM.xy"
         if not os.path.exists(outfile):
             # ---------------------------------------------
             # Find the domain size for the current glacier
@@ -139,7 +139,12 @@ def main(argv):                                                                #
             nz = 21
 
             # Make the default temperature -10C
-            temp = 263 * np.ones((ny, nx, nz))
+            A0   = 3.985e-13  # s^{-1} Pa^{-3}
+            Q    = 6e4        # J / mol
+            R    = 8.314      # J / mol / Kelvin
+            Temp = 263        # Kelvin
+            rate = A0 * np.exp(-Q/(R*Temp)) * np.ones((ny, nx, nz))
+            # temp = 263 * np.ones((ny, nx, nz))
             mask = np.zeros((ny, nx), dtype = bool)
 
 
@@ -182,10 +187,10 @@ def main(argv):                                                                #
                             m = (k * (len(Z[l]) - 1)) / (nz - 1)
 
                             # Add up the value to the running average
-                            temp[i, j, k] += w * T[l][m]
+                            rate[i, j, k] += w * A[l][m]
 
                     # Normalize the running average by the weight sum
-                    temp[i,j,:] /= weights
+                    rate[i,j,:] /= weights
 
 
             # ---------------------------------
@@ -197,7 +202,7 @@ def main(argv):                                                                #
                 for i in range(ny):
                     fid.write("{0} {1} ".format(x[j], y[i]))
                     for k in range(nz):
-                        fid.write("{0} ".format(temp[i, j, k]))
+                        fid.write("{0} ".format(rate[i, j, k]))
                     fid.write("\n")
 
             fid.close()
@@ -206,8 +211,8 @@ def main(argv):                                                                #
 
 
 
-# ---------------------------------------------------------------------------- #
-if __name__ == "__main__":                                                     #
-# ---------------------------------------------------------------------------- #
-    main(argv[1:])
+# ------------------------------------------------------------------------ #
+if __name__ == "__main__":                                                 #
+# ------------------------------------------------------------------------ #
+    main(sys.argv[1:])
 

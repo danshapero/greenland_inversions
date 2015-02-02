@@ -436,7 +436,6 @@
         End
 
 
-
         !------------------------------------------------------------------!
         Function MuIni( Model, nodenumber, dumy) RESULT(U)                 !
         !------------------------------------------------------------------!
@@ -468,7 +467,7 @@
 
             call get_environment_variable('glacier', glacier)
 
-            open(10, file = 'dems/' // trim(glacier) // '/TDEM.xy')
+            open(10, file = 'dems/' // trim(glacier) // '/ADEM.xy')
             Read(10, *) nx
             Read(10, *) ny
             Read(10, *) nz
@@ -508,20 +507,20 @@
 
         ! Compute the fluidity parameter in units of Pa * s from the
         ! Arrhenius relation
-        A0 = 3.985d-13
-        Q = 60
-        if (U > 263.15) then
-            A0 = 1.916d3
-            Q = 139
-        endif
+        ! A0 = 3.985d-13
+        ! Q = 60
+        ! if (U > 263.15) then
+        !    A0 = 1.916d3
+        !    Q = 139
+        ! endif
 
-        U = A0 * exp(-Q / (R*U))
+        ! U = A0 * exp(-Q / (R*U))
 
         ! Include softening of ice from before the last glacial maximum,
         ! when the dustiness made it much softer; generally, this is any
         ! ice within 300m of the bed.
-        alpha = 2 + tanh( (300 - (z - zb)) / 10 )
-        U = alpha * U
+        ! alpha = 2 + tanh( (300 - (z - zb)) / 10 )
+        ! U = alpha * U
 
         ! The viscosity coefficient is the fluidity parameter `A` to the
         ! -1/3 power in units of Pa * s^(1/3)
