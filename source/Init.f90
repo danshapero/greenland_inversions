@@ -456,8 +456,9 @@
 
         logical :: Firsttime = .true.
 
-        Real(kind=dp) :: x, y, z, zs, zb, dz, alpha, A0, Q
+        Real(kind=dp) :: x, y, z, zs, zb, dz, alpha, EZ
         Real(kind=dp), parameter :: year = 3.15567d7, R = 8.314e-3
+        Real(kind=dp), parameter :: lgm = 300.d0, E = 3.d0, dz = 10.d0
 
         SAVE dem, xx, yy, nx, ny, nz
         SAVE Firsttime
@@ -505,22 +506,13 @@
         U = (1 - alpha) * LinearInterp(dem(:,:,k), xx, yy, nx, ny, x, y) &
               & + alpha * LinearInterp(dem(:,:,k+1), xx, yy, nx, ny, x, y)
 
-        ! Compute the fluidity parameter in units of Pa * s from the
-        ! Arrhenius relation
-        ! A0 = 3.985d-13
-        ! Q = 60
-        ! if (U > 263.15) then
-        !    A0 = 1.916d3
-        !    Q = 139
-        ! endif
-
-        ! U = A0 * exp(-Q / (R*U))
-
         ! Include softening of ice from before the last glacial maximum,
-        ! when the dustiness made it much softer; generally, this is any
-        ! ice within 300m of the bed.
-        ! alpha = 2 + tanh( (300 - (z - zb)) / 10 )
-        ! U = alpha * U
+        ! when impurities from the dustier atmosphere made it much softer.
+        ! NOTE: this is hard-coded for lack of a better way to change it
+        ! at run-time; various parameter values and functional forms
+        ! were used.
+        EZ = (1.d0 + E)/2 + (1.d0 - E)/2 * tanh( (z - zb - lgm) / dz )
+        U = EZ * U
 
         ! The viscosity coefficient is the fluidity parameter `A` to the
         ! -1/3 power in units of Pa * s^(1/3)
