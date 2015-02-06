@@ -458,7 +458,7 @@
 
         Real(kind=dp) :: x, y, z, zs, zb, dz, alpha, EZ
         Real(kind=dp), parameter :: year = 3.15567d7, R = 8.314e-3
-        Real(kind=dp), parameter :: lgm = 300.d0, E = 3.d0, dz = 10.d0
+        Real(kind=dp), parameter :: lgm = 300.d0, E = 3.d0, edz = 10.d0
 
         SAVE dem, xx, yy, nx, ny, nz
         SAVE Firsttime
@@ -511,7 +511,7 @@
         ! NOTE: this is hard-coded for lack of a better way to change it
         ! at run-time; various parameter values and functional forms
         ! were used.
-        EZ = (1.d0 + E)/2 + (1.d0 - E)/2 * tanh( (z - zb - lgm) / dz )
+        EZ = (1.d0 + E)/2 + (1.d0 - E)/2 * tanh( (z - zb - lgm) / edz )
         U = EZ * U
 
         ! The viscosity coefficient is the fluidity parameter `A` to the
