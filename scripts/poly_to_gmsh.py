@@ -64,19 +64,19 @@ def poly_to_gmsh(poly_filename, gmsh_filename):
         loop = loops[l]
         nl = len(loop)
         fid.write("Line Loop({0}) = {{{1}"
-                  .format(offset[-1] + l, loop[0]))
+                  .format(offset[-1] + l + 1, loop[0]))
         for k in range(1, nl):
             fid.write(", {0}".format(loop[k]))
         fid.write("};\n")
     fid.write("\n")
 
     fid.write("Plane Surface ({0}) = {{{1}"
-              .format(offset[-1] + num_loops, offset[-1]))
+              .format(offset[-1] + num_loops + 1, offset[-1] + 1))
     for l in range(1, num_loops):
-        fid.write(", {0}".format(offset[-1] + l))
+        fid.write(", {0}".format(offset[-1] + l + 1))
     fid.write("};\n\n")
     fid.write("Recombine Surface{{{0}}};\n"
-              .format(offset[-1] + num_loops))
+              .format(offset[-1] + num_loops + 1))
     fid.write("\n")
 
     fid.write("Mesh.Algorithm = 8;\n\n")
@@ -84,3 +84,4 @@ def poly_to_gmsh(poly_filename, gmsh_filename):
 
 if __name__ == "__main__":
     poly_to_gmsh(sys.argv[1], sys.argv[2])
+
