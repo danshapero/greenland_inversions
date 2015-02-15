@@ -30,15 +30,24 @@ def main(argv):                                                                #
             os.system("wget ftp://sidads.colorado.edu/DATASETS/"
                       "IDBMG4_BedMachineGr/MCdataset-2014-11-19.nc")
     else:
-        os.system("wget ftp://data.cresis.ku.edu/data/temp/"
-                  "for_OIBlandice/Helheim_2006_2013_Composite.zip "
-                  "-P helheim")
-        os.system("wget ftp://data.cresis.ku.edu/data/temp/"
-                  "for_OIBlandice/Kangerdlugssuaq_2006_2013_Composite.zip "
-                  "-P kangerd")
-        os.system("wget ftp://data.cresis.ku.edu/data/grids/old_versions/"
-                  "Jakobshavn_2006_2012_Composite.zip "
-                  "-P jakobshavn")
+        cresis_data = {
+            "helheim": {"url": "temp/for_OIBlandice",
+                        "file": "Helheim_2006_2013_Composite"},
+            "kangerd": {"url": "temp/for_OIBlandice",
+                        "file": "Kangerdlugssuaq_2006_2013_Composite"},
+            "jakobshavn": {"url": "grids/old_versions",
+                           "file": "Jakobshavn_2006_2012_Composite"}
+        }
+
+        for glacier in cresis_data.keys():
+            url = cresis_data[glacier]["url"]
+            filename = cresis_data[glacier]["file"]
+            if not os.path.exists(glacier + "/" + filename):
+                if not os.path.exists(glacier + "/" + filename + ".zip"):
+                    os.system("wget ftp://data.cresis.ku.edu/data/"
+                              + url + "/" + filename + ".zip -P " + glacier)
+                os.system("unzip " + glacier + "/" + filename + ".zip"
+                          + " -d " + glacier)
 
 
     # -----------------------
