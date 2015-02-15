@@ -3,6 +3,7 @@
 import sys
 import argparse
 import os
+import fnmatch
 
 # ---------------------------------------------------------------------------- #
 def main(argv):                                                                #
@@ -32,22 +33,30 @@ def main(argv):                                                                #
     else:
         cresis_data = {
             "helheim": {"url": "temp/for_OIBlandice",
-                        "file": "Helheim_2006_2013_Composite"},
+                        "dir": "Helheim_2006_2013_Composite"},
             "kangerd": {"url": "temp/for_OIBlandice",
-                        "file": "Kangerdlugssuaq_2006_2013_Composite"},
+                        "dir": "Kangerdlugssuaq_2006_2013_Composite"},
             "jakobshavn": {"url": "grids/old_versions",
-                           "file": "Jakobshavn_2006_2012_Composite"}
+                           "dir": "Jakobshavn_2006_2012_Composite"}
         }
 
         for glacier in cresis_data.keys():
             url = cresis_data[glacier]["url"]
-            filename = cresis_data[glacier]["file"]
-            if not os.path.exists(glacier + "/" + filename):
-                if not os.path.exists(glacier + "/" + filename + ".zip"):
+            dir = cresis_data[glacier]["dir"]
+            if not os.path.exists(glacier + "/" + dir):
+                if not os.path.exists(glacier + "/" + dir + ".zip"):
                     os.system("wget ftp://data.cresis.ku.edu/data/"
-                              + url + "/" + filename + ".zip -P " + glacier)
-                os.system("unzip " + glacier + "/" + filename + ".zip"
+                              + url + "/" + dir + ".zip -P " + glacier)
+                os.system("unzip " + glacier + "/" + dir + ".zip"
                           + " -d " + glacier)
+            for term in ["_composite_bottom.txt",
+                         "_composite_surface.txt"]:
+                if not os.path.exists(glacier + "/" + glacier + term):
+                    for file in os.listdir(glacier + "/" + dir + "/grids"):
+                        if fnmatch.fnmatch(file, "*" + term):
+                            sfilename = glacier + "/" + dir + "/grids/" + file
+                            dfilename = glacier + "/" + glacier + term
+                            os.system("cp " + sfilename + " " + dfilename)
 
 
     # -----------------------
