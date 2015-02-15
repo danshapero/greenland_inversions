@@ -3,17 +3,12 @@
 import sys
 import argparse
 import os
-import netCDF4
+import numpy as np
+from netCDF4 import Dataset
 
 from scripts.geodat import *
 from scripts.geotif import *
 import postprocess_jak
-
-velocity_data = {
-    'helheim': 'TSX_E66.50N_27Jan09_07Feb09',
-    'kangerd': 'TSX_E68.80N_28Jan09_08Feb09',
-    'jakobshavn': 'mosaicOffsets'
-}
 
 
 # ---------------------------------------------------------------------------- #
@@ -33,37 +28,35 @@ def main(argv):                                                                #
               "either \"cresis\" or \"morlighem\"\n")
         sys.exit(1)
 
+    glaciers = ["helheim", "kangerd", "jakobshavn"]
 
     # -------------------------
     # Make velocity data files
     # -------------------------
-    for glacier in velocity_data.keys():
+    for glacier in glaciers:
         if not os.path.exists(glacier):
             os.makedirs(glacier)
 
         # Check to see if the velocity data have already been made
         if not( os.path.exists(glacier + '/UDEM.xy') or
-                os.path.exists(glacier + '/VDEM.xy') or
-                os.path.exists(glacier + '/EUDEM.xy') or
-                os.path.exists(glacier + '/EVDEM.xy')):
+                os.path.exists(glacier + '/VDEM.xy')):
 
             # Read in the raw velocity data files
-            filename = '../data/' + glacier + '/' + velocity_data[glacier]
+            filename = '../data/' + glacier + "/mosaicOffsets"
             x, y, vx = read_geodat(filename + ".vx")
             _, _, vy = read_geodat(filename + ".vy")
-            _, _, ex = read_geodat(filename + ".ex")
-            _, _, ey = read_geodat(filename + ".ey")
+
+            nx = len(x)
+            ny = len(y)
 
             # Find the points where there actually is measured velocity data
-            (I, J) = np.where(vx != -2.0e+9)
-            (imin, imax) = (min(I)-2, max(I)+2)
-            (jmin, jmax) = (min(J)-2, max(J)+2)
+            I, J = np.where(vx != -2.0e+9)
+            imin, imax = max(0, min(I) - 2), min(nx - 2, max(I) + 2)
+            jmin, jmax = max(0, min(J) - 2), min(nx - 2, max(J) + 2)
             del I, J
-
+            
             vx = vx[imin: imax+1, jmin: jmax+1]
             vy = vy[imin: imax+1, jmin: jmax+1]
-            ex = ex[imin: imax+1, jmin: jmax+1]
-            ey = ey[imin: imax+1, jmin: jmax+1]
 
             x = x[jmin: jmax+1]
             y = y[imin: imax+1]
@@ -73,24 +66,20 @@ def main(argv):                                                                #
             # Write out the velocity data
             fidu = open(glacier + '/UDEM.xy', 'w')
             fidv = open(glacier + '/VDEM.xy', 'w')
-            fideu = open(glacier + '/EUDEM.xy', 'w')
-            fidev = open(glacier + '/EVDEM.xy', 'w')
 
-            for fid in [fidu, fidv, fideu, fidev]:
+            for fid in [fidu, fidv]:
                 fid.write('{0}\n{1}\n'.format(nx, ny))
-
+                
             for j in range(nx):
                 for i in range(ny):
                     fidu.write('{0} {1} {2}\n'.format(x[j], y[i], vx[i,j]))
                     fidv.write('{0} {1} {2}\n'.format(x[j], y[i], vy[i,j]))
-                    fideu.write('{0} {1} {2}\n'.format(x[j], y[i], ex[i,j]))
-                    fidev.write('{0} {1} {2}\n'.format(x[j], y[i], ey[i,j]))
 
-            for fid in [fidu, fidv, fideu, fidev]:
+            for fid in [fidu, fidv]:
                 fid.close()
 
             # Delete the velocities
-            del vx, vy, ex, ey
+            del vx, vy
 
         print("Done making velocity data for " + glacier)
 
@@ -100,12 +89,15 @@ def main(argv):                                                                #
     # ----------------------------------
 
     if dem_source == "morlighem":
-        fid = netCDF4.Dataset("../data/MCdataset-2014-11-19.nc", "r")
-        x = fid.variables['x'][:]
-        y = fid.variables['y'][:]
+        morlighem_data = Dataset("../data/MCdataset-2014-11-19.nc", "r")
+        x = morlighem_data.variables['x'][:]
+        y = morlighem_data.variables['y'][:]
 
-        dx = x[1] - x[0]
-        dy = y[1] - y[0]
+        xmin, xmax = np.min(x), np.max(x)
+        ymin, ymax = np.min(y), np.max(y)
+
+        dx = np.abs(x[1] - x[0])
+        dy = np.abs(y[1] - y[0])
 
         rects = {"helheim": ((249775.0, 310825.0),
                              (-2592825.0, -2513625.0)),
@@ -115,15 +107,43 @@ def main(argv):                                                                #
                                 (-2314985.0, -2245025.0))}
 
         for glacier, r in rects.iteritems():
-            imin = int( (r[0][0] - x[0]) / dx) )
-            imax = int( (r[0][1] - x[0]) / dx) )
-            jmin = int( (r[1][0] - y[0]) / dy) )
-            jmax = int( (r[1][1] - y[0]) / dy) )
+            jmin = int( (r[0][0] - xmin) / dx )
+            jmax = int( (r[0][1] - xmin) / dx )
+            imin = int( (r[1][0] - ymin) / dy )
+            imax = int( (r[1][1] - ymin) / dy )
 
-            # TODO finish this
-    else:
+            nxp = jmax - jmin
+            nyp = imax - imin
+
+            xp = x[jmin:jmax]
+            yp = y[imin:imax]
+
+            B = np.zeros((nyp, nxp), dtype = np.float64)
+            S = np.zeros((nyp, nxp), dtype = np.float64)
+            B[:,:] = morlighem_data.variables["bed"][imin:imax, jmin:jmax]
+            S[:,:] = morlighem_data.variables["surface"][imin:imax, jmin:jmax]
+
+            yp = yp[::-1]
+            B = B[::-1, :]
+            S = S[::-1, :]
+
+            fields = {"zbDEM.xy": B, "zsDEM.xy": S}
+            for filename, field in fields.iteritems():
+                file = open(glacier + '/' + filename, 'w')
+                file.write("{0}\n{1}\n".format(nxp, nyp))
+                for j in range(nxp):
+                    for i in range(nyp):
+                        if field[i, j] == -9999.0:
+                            field[i, j] = -2.0e+9
+                        file.write("{0} {1} {2}\n"
+                                   .format(xp[j], yp[i], field[i, j]))
+
+        morlighem_data.close()
+
+    #else:
         # TODO: unzip the files from CReSIS and convert their contents from
         # the QGIS format to the one Elmer expects
+
 
     if not os.path.exists("jakobshavn/zsDEM.xy"):
         # Make DEMs for Jakobshavn from special data
