@@ -106,15 +106,18 @@ def main(argv):                                                                #
             xmin, xmax = np.min(x), np.max(x)
             ymin, ymax = np.min(y), np.max(y)
 
-            dx = np.abs(x[1] - x[0])
-            dy = np.abs(y[1] - y[0])
+            dx = x[1] - x[0]
+            dy = y[1] - y[0]
 
             r = rects[glacier]
 
-            jmin = int( (r[0][0] - xmin) / dx )
-            jmax = int( (r[0][1] - xmin) / dx )
-            imin = int( (r[1][0] - ymin) / dy )
-            imax = int( (r[1][1] - ymin) / dy )
+            jmin = int( (r[0][0] - x[0]) / dx )
+            jmax = int( (r[0][1] - x[0]) / dx )
+
+            # Note that this is all weird because Morlighem's dataset goes
+            # from north to south as indices increase
+            imin = int( (r[1][1] - y[0]) / dy )
+            imax = int( (r[1][0] - y[0]) / dy )
 
             nx = jmax - jmin
             ny = imax - imin
