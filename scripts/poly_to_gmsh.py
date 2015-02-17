@@ -3,7 +3,6 @@ from meshes import read_poly
 import numpy as np
 import sys
 
-cl = 1.0e22
 
 # ---------------------------------------------
 def poly_to_gmsh(poly_filename, gmsh_filename):
@@ -43,10 +42,11 @@ def poly_to_gmsh(poly_filename, gmsh_filename):
     fid = open(gmsh_filename, "w")
 
     # Write out the positions of the nodes
+    fid.write("cl = 1.0e+22;\n")
     fid.write("// Mesh points\n")
     for i in range(nn):
-        fid.write("Point({0}) = {{{1}, {2}, 0.0, {3}}};\n"
-                  .format(i+1, x[i], y[i], cl))
+        fid.write("Point({0}) = {{{1}, {2}, 0.0, cl}};\n"
+                  .format(i+1, x[i], y[i]))
     fid.write("\n")
 
     fid.write("// Mesh edges\n")
@@ -79,9 +79,9 @@ def poly_to_gmsh(poly_filename, gmsh_filename):
               .format(offset[-1] + num_loops + 1))
     fid.write("\n")
 
-    fid.write("Mesh.Algorithm = 8;\n\n")
+    fid.write("Mesh.Algorithm = 8;\n")
+    fid.write("Mesh.SubdivisionAlgorithm = 1;\n\n")
 
 
 if __name__ == "__main__":
     poly_to_gmsh(sys.argv[1], sys.argv[2])
-
