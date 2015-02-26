@@ -8,7 +8,7 @@ from netCDF4 import Dataset
 
 from scripts.geodat import *
 from scripts.geotif import *
-import postprocess_jak
+from fixup import fixup_data
 
 
 # ------------------------------------------------------------------------ #
@@ -80,6 +80,9 @@ def main(argv):                                                            #
 
             # Delete the velocities
             del vx, vy
+
+            fixup_data(glacier + "/UDEM.xy", 12)
+            fixup_data(glacier + "/VDEM.xy", 12)
 
         print("Done making velocity data for " + glacier)
 
@@ -197,14 +200,8 @@ def main(argv):                                                            #
             os.system("wget " + surface_dem_url
                         + "jakobshavn/zsDEM.xy -P jakobshavn")
 
-
     print ("Done making surface elevation for Jakobshavn")
 
-    # Post-process the Jakobshavn velocities to interpolate over some small
-    # gaps in the observational data
-    postprocess_jak.main()
-
-    print("Done post-processing Jakobshavn velocity data")
 
 
 if __name__ == "__main__":
