@@ -30,7 +30,7 @@ def relabel_external_missing_data(q, i, j):
                     stack.append( (k, l) )
 
 
-def fill_internal_missing_data(q, x, y):
+def fill_internal_missing_data(q, x, y, d):
     '''
     Fill in any missing data in the interior of the glacier, where it can be
     easily interpolated from surrounding points with data
@@ -51,8 +51,8 @@ def fill_internal_missing_data(q, x, y):
 
         weights = 0.0
 
-        for di in range(-3, 4):
-            for dj in range(-3, 4):
+        for di in range(-d, d+1):
+            for dj in range(-d, d+1):
                 k = i + di
                 l = j + dj
 
@@ -67,37 +67,25 @@ def fill_internal_missing_data(q, x, y):
             print("{0} {1}\n", i, j)
 
 
-def main():
-    x, y, vx = read_dem("jakobshavn/UDEM.xy")
-    x, y, vy = read_dem("jakobshavn/VDEM.xy")
+def fixup_data(filename, d, overwrite = True):
+    x, y, q = read_dem(filename)
 
     nx = len(x)
     ny = len(y)
 
-    q = np.copy(vx)
-    relabel_external_missing_data(q, 0, 0)
-    fill_internal_missing_data(q, x, y)
-    vx = np.maximum(q, vx)
+    qc = np.copy(q)
+    relabel_external_missing_data(qc, 0, 0)
+    fill_internal_missing_data(qc, x, y, d)
+    q = np.maximum(qc, q)
 
-    q = np.copy(vy)
-    relabel_external_missing_data(q, 0, 0)
-    fill_internal_missing_data(q, x, y)
-    vy = np.maximum(q, vy)
-
-    fidu = open("jakobshavn/UDEM0.xy", 'w')
-    fidv = open("jakobshavn/VDEM0.xy", 'w')
-
-    for fid in (fidu, fidv):
-        fid.write("{0}\n{1}\n".format(nx, ny))
+    fid = open(filename + ".fixup", 'w')
+    fid.write("{0}\n{1}\n".format(nx, ny))
 
     for j in range(nx):
         for i in range(ny):
-            fidu.write("{0} {1} {2}\n".format(x[j], y[i], vx[i, j]))
-            fidv.write("{0} {1} {2}\n".format(x[j], y[i], vy[i, j]))
+            fid.write("{0} {1} {2}\n".format(x[j], y[i], q[i, j]))
 
-    for fid in (fidu, fidv):
-        fid.close()
+    fid.close()
 
-    os.system("mv jakobshavn/UDEM0.xy jakobshavn/UDEM.xy")
-    os.system("mv jakobshavn/VDEM0.xy jakobshavn/VDEM.xy")
-
+    if overwrite:
+        os.system("mv " + filename + ".fixup " + filename)
