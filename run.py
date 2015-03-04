@@ -5,7 +5,7 @@ import os
 
 # ------------
 def main(argv):
-    glacier = argv[1]
+    glacier = argv[0]
     os.environ["glacier"] = glacier
 
     startinfo = open("ELMERSOLVER_STARTINFO", "w")
@@ -17,4 +17,4 @@ def main(argv):
 
 # -----------------------
 if __name__ == "__main__":
-    main(argv[1:])
+    main(sys.argv[1:])
