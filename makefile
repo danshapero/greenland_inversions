@@ -14,18 +14,6 @@ lib/%.so: source/%.f90
 	elmerf90 $< -o $@
 
 all: ExtrudeMesh $(SOLVERS)
-#helheim: all
-#	echo elmer/Robin_Beta_Helheim.sif > ELMERSOLVER_STARTINFO ; \
-#	export glacier=helheim ; \
-#	nice -n7 mpirun -n 4 ElmerSolver_mpi
-#kangerd: all
-#	echo elmer/Robin_Beta_Kangerd.sif > ELMERSOLVER_STARTINFO ; \
-#	export glacier=kangerd ; \
-#	nice -n7 mpirun -n 4 ElmerSolver_mpi
-#jakobshavn: all
-#	echo elmer/Robin_Beta_Jakobshavn.sif > ELMERSOLVER_STARTINFO ; \
-#	export glacier=jakobshavn ; \
-#	nice -n7 mpirun -n 4 ElmerSolver_mpi
 
 
 clean:
