@@ -7,7 +7,18 @@ Dependencies:
 * python-scipy, python-numpy
 * python-gdal
 * python-netCDF4
+* metis
 * an MPI implementation
 * libscalapack-mpi1, libscalapack-mpi-dev
 * libmumps-4.10.0, libmumps-dev
 * elmer
+
+To fetch all the various data, run the command
+```python initialize.py -d <dem source> -f <SIA fraction>```
+where `<dem source>` is either `morlighem` or `cresis` depending on whose DEM you wish to use, and `<SIA fraction>` is the fraction of the fraction of the driving stress that the bed is assumed to support at the margins. I usually used `0.5`. This will fetch some fairly big data sets (> 2GB total).
+
+To build the helper functions used by Elmer, the `elmerf90` executable must be on your path and `libelmer.so` has to be on your library search path.
+
+To run the code, execute
+```python run.py```
+On the machines I use, an inversion with 4 cores takes 16 hours for a small mesh like Kangerd and 2 days for a bigger one like Jakobshavn.
