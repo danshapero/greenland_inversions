@@ -1,11 +1,37 @@
 
 import sys
+import argparse
 import os
-
+from sif_template import generate_sif_file
 
 # ------------
 def main(argv):
-    glacier = argv[0]
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-g", "--glacier", required = True,
+                        help = "Name of glacier for inversion; either 'jakobshavn',"
+                               "'helheim' or 'kangerd'.")
+    parser.add_argument("-r", "--regularization", required = False,
+                        help = "Value of the regularization parameter.")
+    parser.add_argument("-i", "--iterations", required = False,
+                        help = "Number of iterations for the optimization procedure.")
+
+    args, _ = parser.parse_known_args(argv)
+
+    glacier = args.glacier
+
+    regularization = 1.0e10
+    if args.regularization:
+        regularization = float(args.regularization)
+
+    max_iterations = 35
+    if args.iterations:
+        max_iterations = int(args.iterations)
+
+    generate_sif_file(glacier,
+                      regularization = regularization,
+                      max_iterations = max_iterations)
+
     os.environ["glacier"] = glacier
 
     startinfo = open("ELMERSOLVER_STARTINFO", "w")
