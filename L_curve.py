@@ -13,7 +13,7 @@ def main(argv):
     rmax = float(argv[1])
     nr   = int(argv[2])
 
-    rs = np.linspace(rmin, rmax, nr)
+    rs = np.logspace(rmin, rmax, nr)
     err = np.zeros(nr)
 
     for n in range(nr):
