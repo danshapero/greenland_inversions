@@ -7,7 +7,7 @@ def bufcount(filename):                                                        #
 # ---------------------------------------------------------------------------- #
     '''
     '''
-    f = open(filename)                  
+    f = open(filename)
     lines = 0
     buf_size = 1024 * 1024
     read_f = f.read # loop optimization
@@ -143,3 +143,12 @@ def get_layer(data, surface = "top"):                                          #
     return np.asarray(x), np.asarray(y), np.asarray(q)
 
 
+# --------------------------------
+def get_error_from_elmer_log(log):
+    err = 0.0
+    for line in log.splitlines():
+        words = line.split()
+        if words[0] == "Optimize_m1qn3Parallel:":
+            err = float(words[3])
+
+    return err
