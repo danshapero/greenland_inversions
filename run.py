@@ -2,11 +2,11 @@
 import sys
 import argparse
 import os
-from sif_template import generate_sif_file
+from elmer import sif_files
 
 # ------------
 def main(argv):
-
+    # Parse command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("-g", "--glacier", required = True,
                         help = "Name of glacier for inversion; either "
@@ -31,16 +31,22 @@ def main(argv):
     if args.iterations:
         max_iterations = int(args.iterations)
 
-    generate_sif_file(glacier,
-                      regularization = regularization,
-                      max_iterations = max_iterations)
+    # Generate a .sif file with the desired parameters
+    sif_files.generate_sif_file(glacier,
+                                regularization = regularization,
+                                max_iterations = max_iterations)
 
+    # Set an environment variable for the glacier we're currently simulating.
+    # This is necessary to convey information to Fortran procedures where we
+    # can't pass this information as a function argument due to restrictions
+    # in Elmer.
     os.environ["glacier"] = glacier
 
     startinfo = open("ELMERSOLVER_STARTINFO", "w")
     startinfo.write("elmer/Robin_Beta_" + glacier.title() + ".sif")
     startinfo.close()
 
+    # Run Elmer and optionally pipe the output to a text file
     output_cmd = ""
     if args.output:
         output_cmd = " > " + args.output + " 2>&1"
