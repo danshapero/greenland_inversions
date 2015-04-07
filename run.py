@@ -9,12 +9,15 @@ def main(argv):
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-g", "--glacier", required = True,
-                        help = "Name of glacier for inversion; either 'jakobshavn',"
-                               "'helheim' or 'kangerd'.")
+                        help = "Name of glacier for inversion; either "
+                               "'jakobshavn', 'helheim' or 'kangerd'.")
     parser.add_argument("-r", "--regularization", required = False,
                         help = "Value of the regularization parameter.")
     parser.add_argument("-i", "--iterations", required = False,
-                        help = "Number of iterations for the optimization procedure.")
+                        help = "Number of iterations for the optimization"
+                               " procedure.")
+    parser.add_argument("-o", "--output", required = False,
+                        help = "Name of file to save Elmer logs to.")
 
     args, _ = parser.parse_known_args(argv)
 
@@ -38,7 +41,10 @@ def main(argv):
     startinfo.write("elmer/Robin_Beta_" + glacier.title() + ".sif")
     startinfo.close()
 
-    os.system("nice -n7 mpirun -n 4 ElmerSolver_mpi")
+    output_cmd = ""
+    if args.output:
+        output_cmd = " > " + args.output + " 2>&1"
+    os.system("nice -n7 mpirun -n 4 ElmerSolver_mpi" + output_cmd)
 
 
 # -----------------------
