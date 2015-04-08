@@ -8,9 +8,18 @@ import numpy as np
 from scripts.meshes import *
 
 
-# ---------------------------------------------------------------------------- #
-def main(argv):                                                                #
-#------------------------------------------------------------------------------#
+# -------------
+def main(argv):
+    # Parse command-line arguments
+    dx = 250
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-l", "--length", required = False,
+                        help = "")
+    args, _ = parser.parse_known_args(argv)
+    if args.length:
+        dx = float(args.length)
+
     glaciers = ["helheim", "kangerd", "jakobshavn"]
 
     for glacier in glaciers:
@@ -76,11 +85,11 @@ def main(argv):                                                                #
             for n in range(ne):
                 speed = sum(v[ele[n,:]])/3
                 if (speed > 1000.0):
-                    area[n] = 62500.0
+                    area[n] = np.sqrt(3) / 4 * dx**2
                 elif (speed > 500.0):
-                    area[n] = 125000.0
+                    area[n] = np.sqrt(3) / 4 * (2*dx)**2
                 else:
-                    area[n] = 500000.0
+                    area[n] = np.sqrt(3) / 4 * (4*dx)**2
 
             fid = open(filename + ".1.area", 'w')
             fid.write('{0}\n'.format(ne))
