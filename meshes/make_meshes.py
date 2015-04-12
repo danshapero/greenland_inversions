@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 import sys
-sys.path.insert(0, "../scripts/")
-
+import argparse
 import os
+
 import numpy as np
 from scripts.meshes import *
 
