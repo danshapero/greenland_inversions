@@ -8,6 +8,11 @@ import numpy as np
 
 # ------------
 def main(argv):
+    """
+    This script runs several inversions for Helheim glacier using
+    different values of the regularization parameter in order to
+    generate the familiar L-curve plot.
+    """
 
     rmin = float(argv[0])
     rmax = float(argv[1])
