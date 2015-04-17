@@ -7,17 +7,20 @@ import os
 glaciers = ["helheim", "kangerd", "jakobshavn"]
 
 
-# ---------------------------------------------------------------------------- #
-def main(argv):                                                                #
-# ---------------------------------------------------------------------------- #
+# ------------
+def main(argv):
     # Parse command line arguments
     dem_source = "morlighem"
+    partitions = 4
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dem", required = True,
                         help = "DEM source, either 'cresis' or 'morlighem'")
+    parser.add_argument("-p", "--partitions", required = True,
+                        help = "Number of mesh partitions")
     args, _ = parser.parse_known_args(argv)
     dem_source = args.dem
+    partitions = int(args.partitions)
 
     if not dem_source in ("morlighem", "cresis"):
         print("Unrecognized DEM source " + dem_source + ", should be\n"
@@ -58,11 +61,11 @@ def main(argv):                                                                #
                       + "3d 11 1 1 0 0 0 0 ../dems/" + glacier + " "
                       + str(dx) + " 3 -2.0e9")
 
-        if not os.path.exists(glacier + "3d/partitioning.4/part.1.header"):
-            os.system("ElmerGrid 2 2 " + glacier + "3d -metis 4 -removeunused")
+        if not os.path.exists(glacier + "3d/partitioning.1/part.1.header"):
+            os.system("ElmerGrid 2 2 " + glacier
+                      + "3d -metis " + str(partitions) + " -removeunused")
 
 
-# ---------------------------------------------------------------------------- #
-if __name__ == "__main__":                                                     #
-# ---------------------------------------------------------------------------- #
+# -----------------------
+if __name__ == "__main__":
     main(sys.argv[1:])

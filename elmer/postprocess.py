@@ -84,31 +84,34 @@ def main(argv):                                                            #
                         help = "Path to triangle mesh and file stem")
     parser.add_argument("-o", "--output", required = True,
                         help = "Output directory and file stem")
+    parser.add_argument("-p", "--partitions", required = True,
+                        help = "Number of mesh partitions")
 
     args, _ = parser.parse_known_args(argv)
 
     mesh_file = args.mesh
     elmer_dir = args.elmer
     out_file  = args.output
+    partitions = int(args.partitions)
 
     # Load in the Triangle mesh for the glacier
     xm, ym, ele, bnd = read_triangle_mesh(expanduser(mesh_file))
     tri = Triangulation(xm, ym, ele)
 
     # Get the basal friction parameter from Elmer
-    beta = get_field("beta", elmer_dir, 4, tri, surface = "bottom")
+    beta = get_field("beta", elmer_dir, partitions, tri, surface = "bottom")
 
     # Get the computed basal velocities
-    uxb = get_field("velocity 1", elmer_dir, 4, tri, surface = "bottom")
-    uyb = get_field("velocity 2", elmer_dir, 4, tri, surface = "bottom")
+    uxb = get_field("velocity 1", elmer_dir, partitions, tri, surface = "bottom")
+    uyb = get_field("velocity 2", elmer_dir, partitions, tri, surface = "bottom")
 
     # Get the computed surface velocities
-    uxs = get_field("velocity 1", elmer_dir, 4, tri, surface = "top")
-    uys = get_field("velocity 2", elmer_dir, 4, tri, surface = "top")
+    uxs = get_field("velocity 1", elmer_dir, partitions, tri, surface = "top")
+    uys = get_field("velocity 2", elmer_dir, partitions, tri, surface = "top")
 
     # Get the observed surface velocities
-    uxso = get_field("velod 1", elmer_dir, 4, tri, surface = "top")
-    uyso = get_field("velod 2", elmer_dir, 4, tri, surface = "top")
+    uxso = get_field("velod 1", elmer_dir, partitions, tri, surface = "top")
+    uyso = get_field("velod 2", elmer_dir, partitions, tri, surface = "top")
 
     # Interpolate the results to a regularly spaced grid
     xmin = 100.0 * math.floor(np.min(xm)/100.0)
@@ -163,4 +166,3 @@ def main(argv):                                                            #
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-
