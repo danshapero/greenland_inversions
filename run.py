@@ -11,6 +11,8 @@ def main(argv):
     parser.add_argument("-g", "--glacier", required = True,
                         help = "Name of glacier for inversion; either "
                                "'jakobshavn', 'helheim' or 'kangerd'.")
+    parser.add_argument("-p", "--partitions", required = True,
+                        help = "Number of mesh partitions.")
     parser.add_argument("-r", "--regularization", required = False,
                         help = "Value of the regularization parameter.")
     parser.add_argument("-i", "--iterations", required = False,
@@ -21,6 +23,7 @@ def main(argv):
 
     args, _ = parser.parse_known_args(argv)
 
+    partitions = int(args.partitions)
     glacier = args.glacier
 
     regularization = 1.0e10
@@ -50,7 +53,8 @@ def main(argv):
     output_cmd = ""
     if args.output:
         output_cmd = " > " + args.output + " 2>&1"
-    os.system("nice -n7 mpirun -n 4 ElmerSolver_mpi" + output_cmd)
+    os.system("nice -n7 mpirun -n " + str(partitions)
+              + " ElmerSolver_mpi" + output_cmd)
 
 
 # -----------------------
