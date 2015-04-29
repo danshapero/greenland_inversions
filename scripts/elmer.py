@@ -119,9 +119,9 @@ def get_variable(variable, directory, filename, partitions, verbose = False):  #
     return data
 
 
-# ---------------------------------------------------------------------------- #
-def get_layer(data, surface = "top"):                                          #
-# ---------------------------------------------------------------------------- #
+# ----------------------------------
+def get_layer(data, surface = "top"):
+
     x = []
     y = []
     q = []
@@ -130,17 +130,53 @@ def get_layer(data, surface = "top"):                                          #
     if surface == "bottom":
         argm = np.argmin
 
+    # For each unique x- coordinate value,
     for x_val in np.unique(data['x']):
+        # select all points that have the same x-value
         x_p = data[ data['x'] == x_val ]
+
         for y_val in np.unique(x_p['y']):
+            # Of those, select all points that have the same x- and y-value
             y_p = x_p[ x_p['y'] == y_val ]
+
+            # Find the index within this sub-array of the datum that has
+            # the greatest z-value
             index = argm(y_p['z'])
+
+            # Extract the x, y-coordinate and field value at that datum
             p = y_p[index]
+
             x.append(p[1])
             y.append(p[2])
             q.append(p[4])
 
     return np.asarray(x), np.asarray(y), np.asarray(q)
+
+
+# --------------------------
+def get_depth_averaged(data):
+    x = []
+    y = []
+    q = []
+
+    # For each unique x- coordinate value,
+    for x_val in np.unique(data['x']):
+        # select all points that have the same x-value.
+        x_p = data[ data['x'] == x_val ]
+
+        for y_val in np.unique(x_p['y']):
+            # Of those, select all points that have the same x- and y-value
+            y_p = x_p[ x_p['y'] == y_val ]
+
+            # Average the values of the field at this (x, y)-point
+            qp = sum(y_p['val']) / len(y_p)
+
+            x.append(yp[0][1])
+            y.append(yp[0][2])
+            q.append(qp)
+
+    return np.asarray(x), np.asarray(y), np.asarray(q)
+
 
 
 # --------------------------------
