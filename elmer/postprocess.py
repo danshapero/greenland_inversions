@@ -47,11 +47,11 @@ def get_field(field, directory, partitions, mesh, surface = "bottom"):     #
     Paramters:
     =========
     field: name of the field to get, e.g. beta, pressure, velod 1, etc.
-    glacier: name of the glacier, either kangerd, helheim or jakobshavn
-    surface: either "top" or "bottom", the layer we want to get the field from
+    directory: path to the files output by Elmer
     partitions: the number of partitions of the Elmer mesh
     mesh: a matplotlib.tri object encapsulating the original Triangle mesh
             used to generated the Elmer mesh
+    surface: either "top" or "bottom", the layer we want to get the field from
 
     Outputs:
     =======

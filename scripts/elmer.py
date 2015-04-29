@@ -39,7 +39,6 @@ def get_variable(variable, directory, filename, partitions, verbose = False):  #
     data:       a packed numpy array consisting of the x, y, z locations of each
                     node of the mesh along with the values of the desired field
                     at each mesh point
-
     """
 
     dstart = np.zeros([2, partitions], dtype = np.int)
@@ -171,15 +170,15 @@ def get_depth_averaged(data):
             # Average the values of the field at this (x, y)-point
             qp = sum(y_p['val']) / len(y_p)
 
-            x.append(yp[0][1])
-            y.append(yp[0][2])
+            x.append(y_p[0][1])
+            y.append(y_p[0][2])
             q.append(qp)
 
     return np.asarray(x), np.asarray(y), np.asarray(q)
 
 
 
-# --------------------------------
+# -------------------------------
 def get_error_from_elmer_log(log):
     err = 0.0
     for line in log.splitlines():
