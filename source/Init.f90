@@ -27,6 +27,10 @@
                 Firsttime = .False.
 
                 call get_environment_variable('glacier', glacier)
+                ! ---------------------------------------------------
+                ! ElmerSolver segfaults without this print statement.
+                ! Investigate further.
+                print *, glacier
 
                 ! open file
                 open(10,file='dems/' // trim(glacier) // '/UDEM.xy')
@@ -295,7 +299,7 @@
         if (Firsttime) then
                 Firsttime=.False.
 
-        ! open file
+                call get_environment_variable('glacier', glacier)
                 open(10,file='dems/'//trim(glacier)//'/zbDEM.xy')
                 Read(10,*) nx
                 Read(10,*) ny
@@ -348,8 +352,6 @@
                 Firsttime=.False.
 
                 call get_environment_variable('glacier', glacier)
-
-        ! open file
                 open(10,file='dems/'//trim(glacier)//'/betaDEM.xy')
                 Read(10,*) nx
                 Read(10,*) ny
