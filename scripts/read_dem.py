@@ -1,7 +1,7 @@
 import numpy as np
 
 def read_dem(filename):
-    fid = open(filename,'r')
+    fid = open(filename, 'r')
 
     nx = int(fid.readline().split()[0])
     ny = int(fid.readline().split()[0])
@@ -9,10 +9,10 @@ def read_dem(filename):
     x = np.zeros(nx)
     y = np.zeros(ny)
 
-    q = np.zeros((ny,nx))
+    q = np.zeros((ny, nx))
 
     for j in range(nx):
         for i in range(ny):
-            (x[j],y[i],q[i,j]) = map(float,fid.readline().split())
+            x[j], y[i], q[i,j] = map(float, fid.readline().split())
 
-    return x,y,q
+    return x, y, q
