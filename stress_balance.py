@@ -13,8 +13,7 @@ from scripts.elmer import get_field
 from scripts.read_dem import read_dem
 
 
-rho     = 917.0
-gravity = 9.81
+rho_g   = 917.0 / 1000.0 * 9.81 #[kPa / m]
 
 
 # ------------
@@ -87,7 +86,7 @@ def basal_stress_power(tri, u, v, tau_x, tau_y):
                       [a/12.0, a/6.0,  a/12.0],
                       [a/12.0, a/12.0, a/6.0]])
         power += (np.dot(u[elem], np.dot(B, tau_x[elem]))
-                  + np.dot(v[elem], np.dot(B, tau_y[elem])))
+                  + np.dot(v[elem], np.dot(B, tau_y[elem]))) * 1.0e3
 
     return power
 
@@ -117,8 +116,8 @@ def driving_stress_power(tri, u, v, s, b):
         ds = grad(x[elem], y[elem], s[elem])
         ht = np.dot(B, h[elem])
 
-        power -= rho * gravity * (ds[0] * np.dot(u[elem], ht)
-                                  + ds[1] * np.dot(v[elem], ht))
+        power -= rho_g * (ds[0] * np.dot(u[elem], ht)
+                          + ds[1] * np.dot(v[elem], ht))
 
     return power
 
