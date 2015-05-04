@@ -27,6 +27,7 @@ def main(argv):
 
         run.main(["-g", "helheim",
                   "-r", str(r),
+                  "-p", "4",
                   "-i", "30",
                   "-o", log_file_name])
 
