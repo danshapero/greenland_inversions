@@ -8,7 +8,7 @@ import argparse
 from os.path import expanduser
 from matplotlib.tri import *
 
-from scripts.meshes import read_triangle_mesh
+from scripts.meshes import read_triangle_mesh, gridded_to_point_cloud
 from scripts.elmer import get_field
 from scripts.read_dem import read_dem
 
@@ -28,31 +28,6 @@ def grad(x, y, q):
                   [y[1] - y[0], y[2] - y[0]]])
     T = np.linalg.inv(S)
     return np.dot(np.array([q[1] - q[0], q[2] - q[0]]), T)
-
-
-# --------------------------------------------
-def interpolate_grid_to_triangle(x, y, q, tri):
-    dx = x[1] - x[0]
-    dy = y[1] - y[0]
-
-    nn = len(tri.x)
-
-    qtri = np.zeros(nn, dtype = np.float64)
-
-    for n in range(nn):
-        i = int( (tri.y[n] - y[0]) / dy )
-        j = int( (tri.x[n] - x[0]) / dx )
-
-        alpha_y = (tri.y[n] - y[i]) / dy
-        alpha_x = (tri.x[n] - x[j]) / dx
-
-        qtri[n] = (q[i, j]
-                   + alpha_x * (q[i, j+1] - q[i, j])
-                   + alpha_y * (q[i+1, j] - q[i, j])
-                   + alpha_x * alpha_y * (q[i, j] + q[i+1, j+1]
-                                          - q[i, j+1] - q[i+1, j]))
-
-    return qtri
 
 
 # ---------------------------------------------
@@ -179,10 +154,10 @@ def main(argv):
 
     # Compute the driving stress
     xb, yb, bb = read_dem(bed_file)
-    b = interpolate_grid_to_triangle(xb, yb, bb, tri)
+    b = gridded_to_point_cloud(xm, ym, xb, yb, bb)
 
     xs, ys, ss = read_dem(surf_file)
-    s = interpolate_grid_to_triangle(xs, ys, ss, tri)
+    s = gridded_to_point_cloud(xm, ym, xs, ys, ss)
 
     # Compute the stresses
     basal_power   = basal_stress_power(tri, ub, vb, tau_b_x, tau_b_y)
