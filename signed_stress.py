@@ -23,6 +23,36 @@ def has_data(q, i, j):
             and (q[i, j-1] != -2.0e+9))
 
 
+# -------------------------
+def moving_avg_filter(q, m):
+    """
+    Filter the gridded data `q` with a moving average over `m` grid points
+    """
+    ny, nx = np.shape(q)
+    qf = -2.0e+9 * np.ones((ny, nx), dtype = np.float64)
+
+    for i in range(m, ny - m):
+        for j in range(m, nx - m):
+            if has_data(q, i, j):
+                qfij = 0.0
+                total = 0
+                for di in range(-m, m+1):
+                    for dj in range(-m, m+1):
+                        qidijdj = q[i + di, j + dj]
+                        if qidijdj != -2.0e+9:
+                            qfij  += qidijdj
+                            total += 1
+                qf[i, j] = qfij / total
+
+    return qf
+
+
+# -------------------------
+def triangular_filter(q, m):
+    k = min(1, int(m/2))
+    return moving_avg_filter(moving_avg_filter(q, k), k)
+
+
 # ------------
 def main(argv):
 
@@ -52,11 +82,17 @@ def main(argv):
     # Read in the surface and bed elevations
     x, y, b = read_dem(bed_file)
     _, _, s = read_dem(surf_file)
-    h = s - b
 
     ny, nx = np.shape(s)
     dx = x[1] - x[0]
     dy = y[1] - y[0]
+
+    # Filter out any oscillations in the surface elevation that occur
+    # over the width of ~1 ice thickness
+    m = int(1000 / dx)
+    s = triangular_filter(s, m)
+
+    h = s - b
 
     # Compute the driving stresses
     taudx = -9999.0 * np.ones((ny, nx), dtype = np.float64)
