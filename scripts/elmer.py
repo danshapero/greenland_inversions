@@ -16,6 +16,7 @@ def get_error_from_elmer_log(log):
 
     return err
 
+
 # --------------------
 def bufcount(filename):
     """
