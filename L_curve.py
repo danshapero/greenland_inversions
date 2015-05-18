@@ -1,10 +1,40 @@
 
-from scripts.elmer import get_error_from_elmer_log
+import sys
+import numpy as np
+
+from matplotlib.tri import *
+
+from scripts.elmer import get_error_from_elmer_log, get_field
+from scripts.meshes import read_triangle_mesh, area
 import run
 import archive
 
-import sys
-import numpy as np
+
+# -------------------------
+def square_gradient(tri, q):
+    """
+    Given a triangulation object and a field `q` defined at the vertices of
+    the triangulation, return
+        integral |grad q|^2 dx
+    """
+
+    finder = tri.get_trifinder()
+    interp = LinearTriInterpolator(tri, q, trifinder = finder)
+
+    integral = 0.0
+    num_triangles, _ = np.shape(tri.triangles)
+
+    for n in range(num_triangles):
+        ele = tri.triangles[n, :]
+        x = tri.x[ele]
+        y = tri.y[ele]
+
+        a = area(x, y)
+        q_x, q_y = interp.gradient(sum(x) / 3, sum(y) / 3)
+
+        integral += a * (q_x.data**2 + q_y.data**2)
+
+    return integral
 
 
 # ------------
