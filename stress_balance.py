@@ -8,18 +8,12 @@ import argparse
 from os.path import expanduser
 from matplotlib.tri import *
 
-from scripts.meshes import read_triangle_mesh, gridded_to_point_cloud
+from scripts.meshes import read_triangle_mesh, gridded_to_point_cloud, area
 from scripts.elmer import get_field
 from scripts.read_dem import read_dem
 
 
 rho_g   = 917.0 / 1000.0 * 9.81 #[kPa / m]
-
-
-# ------------
-def area(x, y):
-    return 0.5 * np.abs((x[1] - x[0]) * (y[2] - y[0]) -
-                        (x[2] - x[0]) * (y[1] - y[0]))
 
 
 # ---------------
