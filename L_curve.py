@@ -1,5 +1,6 @@
 
 import sys
+import os
 import shutil
 import tarfile
 import tempfile
@@ -58,7 +59,7 @@ def l_curve_point(archive_name, glacier, regularization, partitions):
     grad_beta_square = square_gradient(tri, beta)
 
     # Get the value of the total cost function from the Elmer log file
-    log_file_name = "helheim_lambda-" + str(regularization) + ".txt"
+    log_file_name = "helheim_lambda-" + repr(regularization) + ".txt"
     with open(temp_dir_name + '/' + log_file_name, "r") as log_file:
         cost_function = get_error_from_elmer_log(log_file.read())
 
@@ -68,7 +69,53 @@ def l_curve_point(archive_name, glacier, regularization, partitions):
     return cost_function, grad_beta_square
 
 
-# ------------
+# ---------------
+def analyze(argv):
+    """
+    This script analyzes the results of the main function and produces
+    the L-curve plot.
+    """
+    costs = []
+    tikhs = []
+    regs  = []
+
+    glacier = "helheim"
+    extension = ".tar.gz"
+
+    directory = argv[0]
+    for archive_name in [f for f in os.listdir(directory)
+                         if (os.path.isfile(os.path.join(directory, f))
+                             and
+                             f[-len(extension):] == extension)]:
+        start_index = len(glacier) + len("_lambda-")
+        regularization = float(archive_name[start_index: -len(extension)])
+        cost, tikh = l_curve_point(os.path.join(directory, archive_name),
+                                   glacier,
+                                   regularization,
+                                   4)
+        costs.append(cost)
+        tikhs.append(tikh)
+        regs.append(regularization)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    plt.scatter(tikhs, costs)
+    for k in range(len(regs)):
+        ax.annotate("{0:.3e}".format(regs[k]),
+                    xy = (tikhs[k], costs[k]),
+                    xytext = (0, 45),
+                    textcoords = 'offset points',
+                    rotation = 45)
+    plt.xlabel('Model norm (MPa * m / a)', fontsize = 16)
+    plt.ylabel('Cost function (MPa * m^3 / a)', fontsize = 16)
+    plt.xlim(0, 1.15 * np.max(tikhs))
+    plt.ylim(0.95 * np.min(costs), 1.05 * np.max(costs))
+    plt.show()
+
+    return regs, tikhs, costs
+
+
+# -----------
 def main(argv):
     """
     This script runs several inversions for Helheim glacier using
@@ -97,4 +144,7 @@ def main(argv):
                       "-x", log_file_name])
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    if sys.argv[1] == "run":
+        main(sys.argv[2:])
+    else:
+        analyze(sys.argv[2:])

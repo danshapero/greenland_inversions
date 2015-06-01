@@ -11,9 +11,8 @@ from scripts.geotif import *
 from fixup import fixup_data
 
 
-# ------------------------------------------------------------------------ #
-def main(argv):                                                            #
-# ------------------------------------------------------------------------ #
+# ------------
+def main(argv):
     # Parse command line arguments
     dem_source = "morlighem"
 
@@ -32,7 +31,6 @@ def main(argv):                                                            #
 
     # -------------------------
     # Make velocity data files
-    # -------------------------
     for glacier in glaciers:
         if not os.path.exists(glacier):
             os.makedirs(glacier)
