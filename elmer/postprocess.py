@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
 import sys
+import os
+import shutil
+import tarfile
+import tempfile
 import argparse
 from os.path import expanduser
 
@@ -11,31 +15,22 @@ from scripts.meshes import *
 from scripts.write_qgis import *
 
 
-# ------------
-def main(argv):
+# --------------------------------------
+def pp_archive(archive_name, glacier, partitions):
+    # Extract the archive of simulation results to a temporary directory
+    temp_dir_name = tempfile.mkdtemp()
+    tar = tarfile.open(name = archive_name, mode = 'r:gz')
+    tar.extractall(path = temp_dir_name)
+    tar.close()
 
-    mesh_file = ''
-    elmer_dir = ''
-    out_file  = ''
+    pp_directory(temp_dir_name + "/meshes/" + glacier + '/' + glacier + ".2",
+                 temp_dir_name + "/elmer/"  + glacier + '/' + glacier + "3d",
+                 partitions,
+                 temp_dir_name)
 
-    # Parse command-line arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--elmer", required = True,
-                        help = "Directory of Elmer result files")
-    parser.add_argument("-m", "--mesh", required = True,
-                        help = "Path to triangle mesh and file stem")
-    parser.add_argument("-o", "--output", required = True,
-                        help = "Output directory and file stem")
-    parser.add_argument("-p", "--partitions", required = True,
-                        help = "Number of mesh partitions")
 
-    args, _ = parser.parse_known_args(argv)
-
-    mesh_file = args.mesh
-    elmer_dir = args.elmer
-    out_file  = args.output
-    partitions = int(args.partitions)
-
+# ----------------------------------------------------------
+def pp_directory(mesh_file, elmer_dir, partitions, out_file):
     # Load in the Triangle mesh for the glacier
     xm, ym, ele, bnd = read_triangle_mesh(expanduser(mesh_file))
     tri = Triangulation(xm, ym, ele)
@@ -115,6 +110,35 @@ def main(argv):
     write_to_qgis(out_file + "_ub.txt",   ub,  x[0], y[0], 100.0, -9999)
     write_to_qgis(out_file + "_uso.txt",  uso, x[0], y[0], 100.0, -9999)
     write_to_qgis(out_file + "_uh.txt",   uh,  x[0], y[0], 100.0, -9999)
+
+
+
+# ------------
+def main(argv):
+
+    mesh_file = ''
+    elmer_dir = ''
+    out_file  = ''
+
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-e", "--elmer", required = True,
+                        help = "Directory of Elmer result files")
+    parser.add_argument("-m", "--mesh", required = True,
+                        help = "Path to triangle mesh and file stem")
+    parser.add_argument("-o", "--output", required = True,
+                        help = "Output directory and file stem")
+    parser.add_argument("-p", "--partitions", required = True,
+                        help = "Number of mesh partitions")
+
+    args, _ = parser.parse_known_args(argv)
+
+    mesh_file = args.mesh
+    elmer_dir = args.elmer
+    out_file  = args.output
+    partitions = int(args.partitions)
+
+    pp_directory(mesh_file, elmer_dir, partitions, out_file)
 
 
 if __name__ == "__main__":
