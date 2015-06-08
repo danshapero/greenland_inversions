@@ -140,7 +140,7 @@ def pp_archive(archive_name, glacier, partitions, out_file):
                  temp_dir_name + '/' + glacier)
 
     tar = tarfile.open(name = out_file, mode = 'w:gz')
-    tar.add(temp_dir_name)
+    tar.add(temp_dir_name, arcname = '')
     tar.close()
 
     shutil.rmtree(temp_dir_name)
