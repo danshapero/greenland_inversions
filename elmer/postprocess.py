@@ -15,22 +15,31 @@ from scripts.meshes import *
 from scripts.write_qgis import *
 
 
-# --------------------------------------
-def pp_archive(archive_name, glacier, partitions):
-    # Extract the archive of simulation results to a temporary directory
-    temp_dir_name = tempfile.mkdtemp()
-    tar = tarfile.open(name = archive_name, mode = 'r:gz')
-    tar.extractall(path = temp_dir_name)
-    tar.close()
-
-    pp_directory(temp_dir_name + "/meshes/" + glacier + '/' + glacier + ".2",
-                 temp_dir_name + "/elmer/"  + glacier + '/' + glacier + "3d",
-                 partitions,
-                 temp_dir_name)
-
 
 # ----------------------------------------------------------
 def pp_directory(mesh_file, elmer_dir, partitions, out_file):
+    """
+    Post-process the output from an Elmer inversion into several Arc/Info Grid
+    files that can be read by e.g. ArcGIS, QGIS, etc.
+
+    Parameters:
+    ==========
+    mesh_file:  the stem of the Triangle mesh used in the Elmer inversions, e.g
+                if the Triangle mesh was "dir/meshes/helheim.3.<node|ele|..>"
+                then the stem would be "dir/meshes/helheim.3".
+    elmer_dir:  the directory containing the Elmer output files,
+                "Test_Robin_Beta.result.<partition>"
+    partitions: number of parallel partitions used for the inversion
+    out_file:   desired stem of the output files
+
+    Writes:
+    ======
+    <out_file>_taub.txt: computed basal shear stress
+    <out_file>_uh.txt:   computed depth-averaged velocities
+    <out_file>_ub.txt:   computed basal velocities
+    <out_file>_us.txt:   computed surface velocities
+    <out_file>_uso.txt:  input surface velocities
+    """
     # Load in the Triangle mesh for the glacier
     xm, ym, ele, bnd = read_triangle_mesh(expanduser(mesh_file))
     tri = Triangulation(xm, ym, ele)
@@ -113,32 +122,59 @@ def pp_directory(mesh_file, elmer_dir, partitions, out_file):
 
 
 
+# ---------------------------------------------------------
+def pp_archive(archive_name, glacier, partitions, out_file):
+    """
+    Same thing as pp_directory, only on a .tar archive containing the Elmer
+    results as output by the `archive.py` script.
+    """
+    # Extract the archive of simulation results to a temporary directory
+    temp_dir_name = tempfile.mkdtemp()
+    tar = tarfile.open(name = archive_name, mode = 'r:gz')
+    tar.extractall(path = temp_dir_name)
+    tar.close()
+
+    pp_directory(temp_dir_name + "/meshes/" + glacier + '/' + glacier + ".2",
+                 temp_dir_name + "/elmer/"  + glacier + "3d",
+                 partitions,
+                 temp_dir_name + '/' + glacier)
+
+    tar = tarfile.open(name = out_file, mode = 'w:gz')
+    tar.add(temp_dir_name)
+    tar.close()
+
+    shutil.rmtree(temp_dir_name)
+
+
+
 # ------------
 def main(argv):
-
-    mesh_file = ''
-    elmer_dir = ''
-    out_file  = ''
-
-    # Parse command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--elmer", required = True,
-                        help = "Directory of Elmer result files")
-    parser.add_argument("-m", "--mesh", required = True,
-                        help = "Path to triangle mesh and file stem")
+                        help = "Directory or archive of Elmer result files")
     parser.add_argument("-o", "--output", required = True,
-                        help = "Output directory and file stem")
+                        help = "Location for output")
     parser.add_argument("-p", "--partitions", required = True,
                         help = "Number of mesh partitions")
+    parser.add_argument("-m", "--mesh", required = False,
+                        help = "Path to triangle mesh and file stem; required"
+                        " if post-processing from directory.")
+    parser.add_argument("-g", "--glacier", required = False,
+                        help = "Name of glacier; required if post-processing"
+                        " from .tar archive.")
 
     args, _ = parser.parse_known_args(argv)
 
-    mesh_file = args.mesh
-    elmer_dir = args.elmer
-    out_file  = args.output
+    elmer = args.elmer
+    out_file = args.output
     partitions = int(args.partitions)
 
-    pp_directory(mesh_file, elmer_dir, partitions, out_file)
+    if os.path.isdir(elmer):
+        mesh_file = args.mesh
+        pp_directory(mesh_file, elmer, partitions, out_file)
+    else:
+        glacier = args.glacier
+        pp_archive(elmer, glacier, partitions, out_file)
 
 
 if __name__ == "__main__":
