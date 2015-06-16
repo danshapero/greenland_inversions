@@ -5,9 +5,8 @@ import argparse
 import os
 import fnmatch
 
-# ---------------------------------------------------------------------------- #
-def main(argv):                                                                #
-# ---------------------------------------------------------------------------- #
+# ------------
+def main(argv):
     dem_source = "morlighem"
 
     # Parse command-line arguments
@@ -23,13 +22,12 @@ def main(argv):                                                                #
         sys.exit(1)
 
 
-    # ------------------------
+    # -----------------------
     # Retrieve elevation data
-    # ------------------------
     if dem_source == "morlighem":
-        if not os.path.exists("MCdataset-2014-11-19.nc"):
+        if not os.path.exists("MCdataset-2015-04-27.nc"):
             os.system("wget ftp://sidads.colorado.edu/DATASETS/"
-                      "IDBMG4_BedMachineGr/MCdataset-2014-11-19.nc")
+                      "IDBMG4_BedMachineGr/MCdataset-2015-04-27.nc")
     else:
         cresis_data = {
             "helheim": {"url": "temp/for_OIBlandice",
@@ -59,9 +57,8 @@ def main(argv):                                                                #
                             os.system("cp " + sfilename + " " + dfilename)
 
 
-    # -----------------------
+    # ----------------------
     # Retrieve velocity data
-    # -----------------------
     glaciers = ["helheim", "kangerd", "jakobshavn"]
 
     # Make directories
@@ -72,7 +69,7 @@ def main(argv):                                                                #
     # Retrieve velocity data
     extensions = ['.vx', '.vx.geodat', '.vy', '.vy.geodat',
                     '.ex', '.ex.geodat', '.ey', '.ey.geodat', '.meta']
-    website = "http://students.washington.edu/shapero/"
+    website = "http://students.washington.edu/shapero/greenland-paper-2015/"
     for glacier in glaciers:
         for e in extensions:
             filename = "mosaicOffsets" + e
@@ -81,21 +78,18 @@ def main(argv):                                                                #
                 os.system("wget " + url + ' -P ' + glacier)
 
 
-    # -------------------------------------
+    # ------------------------------------
     # Retrieve temperature / rheology data
-    # -------------------------------------
-    url = "http://students.washington.edu/shapero/"
     for glacier in ["helheim", "kangerd", "jakobshavn"]:
         filename = "xyzTA" + glacier + ".txt"
         if not os.path.exists(glacier + '/' + filename):
-            os.system("wget " + url + "temp_data/"
+            os.system("wget " + website + "temp_data/"
                         + filename + ' -P ' + glacier)
 
 
-    # -------------------------------------------------------
+    # ------------------------------------------------------
     # Retrieve special surface elevation data for Jakobshavn
-    # -------------------------------------------------------
-    url = "http://students.washington.edu/shapero/jakobshavn/"
+    url = website + "jakobshavn/"
     if not os.path.exists("jakobshavn/dem13Mar.smooth"):
         os.system("wget " + url + "dem13Mar.smooth -P jakobshavn")
         os.system("wget " + url + "dem13Mar.smooth.geodat -P jakobshavn")

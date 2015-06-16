@@ -100,7 +100,7 @@ def main(argv):
         # If we're using the mass-conserving bed DEM, extract the right window
         # for each glacier from the big netCDF file for all of Greenland
         if dem_source == "morlighem":
-            morlighem_data = Dataset("../data/MCdataset-2014-11-19.nc", "r")
+            morlighem_data = Dataset("../data/MCdataset-2015-04-27.nc", "r")
             x = morlighem_data.variables['x'][:]
             y = morlighem_data.variables['y'][:]
 
