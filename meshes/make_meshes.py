@@ -20,7 +20,8 @@ def main(argv):
     if args.length:
         dx = float(args.length)
 
-    glaciers = ["helheim", "kangerd", "jakobshavn"]
+    #glaciers = ["helheim", "kangerd", "jakobshavn"]
+    glaciers = ["jakobshavn"]
 
     for glacier in glaciers:
         filename = glacier + '/' + glacier

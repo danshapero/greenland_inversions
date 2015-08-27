@@ -4,8 +4,8 @@ import sys
 import argparse
 import os
 
-glaciers = ["helheim", "kangerd", "jakobshavn"]
-
+#glaciers = ["helheim", "kangerd", "jakobshavn"]
+glaciers = ["jakobshavn"]
 
 # ------------
 def main(argv):
