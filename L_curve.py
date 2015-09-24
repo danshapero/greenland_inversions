@@ -4,8 +4,11 @@ import os
 import shutil
 import tarfile
 import tempfile
+
+import math
 import numpy as np
 
+import matplotlib.pyplot as plt
 from matplotlib.tri import *
 
 from scripts.elmer import get_error_from_elmer_log, get_field
@@ -101,7 +104,8 @@ def analyze(argv):
     ax = fig.add_subplot(111)
     plt.scatter(tikhs, costs)
     for k in range(len(regs)):
-        ax.annotate("{0:.3e}".format(regs[k]),
+        exponent = math.log(regs[k], 10)
+        ax.annotate("10^{0:.2f}".format(exponent),
                     xy = (tikhs[k], costs[k]),
                     xytext = (0, 45),
                     textcoords = 'offset points',
