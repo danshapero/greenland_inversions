@@ -11,6 +11,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.tri import *
 
+# Get matplotlib to use LaTeX
+from matplotlib import rc
+rc('font', **{'family':'sans-serif', 'sans-serif':['Arial']})
+rc('text', usetex=True)
+
 from scripts.elmer import get_error_from_elmer_log, get_field
 from scripts.meshes import read_triangle_mesh, area
 import run
@@ -105,13 +110,13 @@ def analyze(argv):
     plt.scatter(tikhs, costs)
     for k in range(len(regs)):
         exponent = math.log(regs[k], 10)
-        ax.annotate("10^{0:.2f}".format(exponent),
+        ax.annotate(r'$10^{{{0:.2f}}}$'.format(exponent),
                     xy = (tikhs[k], costs[k]),
                     xytext = (0, 45),
                     textcoords = 'offset points',
                     rotation = 45)
-    plt.xlabel('Model norm (MPa * m / a)', fontsize = 16)
-    plt.ylabel('Cost function (MPa * m^3 / a)', fontsize = 16)
+    plt.xlabel(r'Model norm (MPa $\cdot$ m / a)$', fontsize = 16)
+    plt.ylabel(r'Cost function (MPa $\cdot$ m${{{}}}^3$ / a)', fontsize = 16)
     plt.xlim(0, 1.15 * np.max(tikhs))
     plt.ylim(0.95 * np.min(costs), 1.05 * np.max(costs))
     plt.show()
