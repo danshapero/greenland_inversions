@@ -77,11 +77,10 @@ def l_curve_point(archive_name, glacier, regularization, partitions):
     return cost_function, grad_beta_square
 
 
-# ---------------
-def analyze(argv):
+# --------------------------------
+def get_l_curve_results(directory, overwrite = False):
     """
-    This script analyzes the results of the main function and produces
-    the L-curve plot.
+    Get the errors from the L-curve runs
     """
     costs = []
     tikhs = []
@@ -90,9 +89,9 @@ def analyze(argv):
     glacier = "helheim"
     extension = ".tar.gz"
 
-    directory = argv[0]
+    # If the output hasn't been cached, retrieve it from the giant archives
     cached_output = os.path.join(directory, "helheim_l_curve.txt")
-    if not os.path.exists(cached_output):
+    if not os.path.exists(cached_output) or overwrite:
         for archive_name in [f for f in os.listdir(directory)
                              if (os.path.isfile(os.path.join(directory, f))
                                  and
@@ -105,11 +104,13 @@ def analyze(argv):
             tikhs.append(tikh)
             regs.append(regularization)
 
+        # Save these results to a text file
         with open(cached_output, 'w') as fid:
             fid.write("cost,model_norm,lambda\n")
             for k in range(len(costs)):
                 fid.write("{0},{1},{2}\n".format(costs[k], tikhs[k], regs[k]))
 
+    # Open the cached output
     with open(cached_output, 'r') as fid:
         line = fid.readline()
         line = fid.readline().split('\n')[0]
@@ -119,6 +120,17 @@ def analyze(argv):
             tikhs.append(float(t))
             regs.append(float(r))
             line = fid.readline().split('\n')[0]
+
+    return costs, tikhs, regs
+
+
+# ---------------
+def analyze(argv):
+    """
+    This script analyzes the results of the main function and produces
+    the L-curve plot.
+    """
+    costs, tikhs, regs = get_l_curve_results(argv[0])
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
