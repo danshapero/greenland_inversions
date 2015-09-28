@@ -49,6 +49,28 @@ def square_gradient(tri, q):
     return integral
 
 
+# ------------------------------
+def square_norm(tri, q):
+    finder = tri.get_trifinder()
+    interp = LinearTriInterpolator(tri, q, trifinder = finder)
+
+    integral = 0.0
+    num_triangles, _ = np.shape(tri.triangles)
+
+    for n in range(num_triangles):
+        ele = tri.triangles[n, :]
+        x = tri.x[ele]
+        y = tri.y[ele]
+        a = area(x, y)
+        B = a / 12 * (np.ones((3, 3)) + np.eye(3))
+
+        qn = interp(x, y)
+
+        integral += np.dot(qn, np.dot(B, qn))
+
+    return integral
+
+
 # ------------------------------------------------------------------
 def l_curve_point(archive_name, glacier, regularization, partitions):
     # Extract the archive of simulation results to a temporary directory
@@ -62,14 +84,19 @@ def l_curve_point(archive_name, glacier, regularization, partitions):
     x, y, ele, bnd = read_triangle_mesh(temp_dir_name + "/meshes/" +
                                         glacier + '/' + glacier + ".2")
     tri = Triangulation(x, y, ele)
-    beta = get_field("beta", temp_dir_name + "/elmer/" + glacier + "3d",
-                     partitions, tri, surface = "bottom")
+
+    directory = temp_dir_name + "/elmer/" + glacier + "3d"
+    beta = get_field("beta", directory, partitions, tri, surface = "bottom")
+
+    uo = get_field("velod 1", directory, partitions, tri, surface = "top")
+    vo = get_field("velod 2", directory, partitions, tri, surface = "top")
+
+    um = get_field("velocity 1", directory, partitions, tri, surface = "top")
+    vm = get_field("velocity 2", directory, partitions, tri, surface = "top")
+
     grad_beta_square = square_gradient(tri, beta)
 
-    # Get the value of the total cost function from the Elmer log file
-    log_file_name = "helheim_lambda-" + repr(regularization) + ".txt"
-    with open(temp_dir_name + '/' + log_file_name, "r") as log_file:
-        cost_function = get_error_from_elmer_log(log_file.read())
+    cost_function = square_norm(tri, uo - um) + square_norm(tri, vo - vm)
 
     # Delete the temporary directory
     shutil.rmtree(temp_dir_name)
