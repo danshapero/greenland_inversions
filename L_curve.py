@@ -112,11 +112,12 @@ def analyze(argv):
         exponent = math.log(regs[k], 10)
         ax.annotate(r'$10^{{{0:.2f}}}$'.format(exponent),
                     xy = (tikhs[k], costs[k]),
-                    xytext = (0, 45),
+                    xytext = (0, 30),
                     textcoords = 'offset points',
-                    rotation = 45)
-    plt.xlabel(r'Model norm (MPa $\cdot$ m / a)$', fontsize = 16)
-    plt.ylabel(r'Cost function (MPa $\cdot$ m${{{}}}^3$ / a)', fontsize = 16)
+                    rotation = 45,
+                    fontsize = 16)
+    plt.xlabel(r'Model norm (MPa $\cdot$ m / a)', fontsize = 16)
+    plt.ylabel(r'Cost function (MPa $\cdot$ m${}^3$ / a)', fontsize = 16)
     plt.xlim(0, 1.15 * np.max(tikhs))
     plt.ylim(0.95 * np.min(costs), 1.05 * np.max(costs))
     plt.show()
