@@ -91,19 +91,34 @@ def analyze(argv):
     extension = ".tar.gz"
 
     directory = argv[0]
-    for archive_name in [f for f in os.listdir(directory)
-                         if (os.path.isfile(os.path.join(directory, f))
-                             and
-                             f[-len(extension):] == extension)]:
-        start_index = len(glacier) + len("_lambda-")
-        regularization = float(archive_name[start_index: -len(extension)])
-        cost, tikh = l_curve_point(os.path.join(directory, archive_name),
-                                   glacier,
-                                   regularization,
-                                   4)
-        costs.append(cost)
-        tikhs.append(tikh)
-        regs.append(regularization)
+    cached_output = os.path.join(directory, "helheim_l_curve.txt")
+    if not os.path.exists(cached_output):
+        for archive_name in [f for f in os.listdir(directory)
+                             if (os.path.isfile(os.path.join(directory, f))
+                                 and
+                                 f[-len(extension):] == extension)]:
+            start_index = len(glacier) + len("_lambda-")
+            regularization = float(archive_name[start_index: -len(extension)])
+            cost, tikh = l_curve_point(os.path.join(directory, archive_name),
+                                       glacier, regularization, 4)
+            costs.append(cost)
+            tikhs.append(tikh)
+            regs.append(regularization)
+
+        with open(cached_output, 'w') as fid:
+            fid.write("cost,model_norm,lambda\n")
+            for k in range(len(costs)):
+                fid.write("{0},{1},{2}\n".format(costs[k], tikhs[k], regs[k]))
+
+    with open(cached_output, 'r') as fid:
+        line = fid.readline()
+        line = fid.readline().split('\n')[0]
+        while(line):
+            c, t, r = line.split(',')
+            costs.append(float(c))
+            tikhs.append(float(t))
+            regs.append(float(r))
+            line = fid.readline().split('\n')[0]
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
